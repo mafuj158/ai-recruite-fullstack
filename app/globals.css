@@ -1,0 +1,558 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #F6F8FA;
+  --color-foreground: #0D0D12;
+  --color-forest: #244034;
+  --color-lime: #D2F34C;
+  --font-primary: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-secondary: var(--font-eb-garamond), serif;
+  /* custom breakpoints */
+  --breakpoint-3xs: 375px;
+  /* For small phones */
+  --breakpoint-2xs: 390px;
+  /* For medium phones */
+  --breakpoint-xs: 480px;
+  /* For small tablets */
+  --breakpoint-3xl: 1920px;
+  /* For desktop version */
+
+  /* Global Roundness Standard: rounded (4px / 0.25rem) across the entire site */
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius: 0.25rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.25rem;
+  --radius-2xl: 0.25rem;
+  --radius-3xl: 0.25rem;
+}
+
+/*
+default breakpoints of tailwind css 
+sm: 640px
+md: 768px
+lg: 1024px
+xl: 1280px
+2xl: 1536px
+*/
+
+html[data-scroll-behavior="smooth"] {
+  scroll-behavior: smooth;
+}
+
+html {
+  height: auto !important;
+}
+
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"]:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+@utility container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility text-2xs {
+  font-size: 0.6875rem;
+  line-height: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-inline: 2rem;
+  }
+}
+
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-primary);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+@keyframes typing-dot {
+  0%, 80%, 100% {
+    transform: translateY(0) scale(0.85);
+    opacity: 0.35;
+  }
+  40% {
+    transform: translateY(-3.5px) scale(1.05);
+    opacity: 1;
+  }
+}
+
+.animate-typing-dot {
+  animation: typing-dot 1.2s infinite ease-in-out both;
+}
+
+/* Ant Design Select overrides in CommonFieldset */
+.common-select {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  overflow: hidden !important;
+}
+
+/* Root antd select */
+.common-select .ant-select {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  padding-inline: 0 !important;
+  padding-block: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+/* Single select fixed height matching text input */
+.common-select .ant-select:not(.ant-select-multiple) {
+  height: 1.5rem !important;
+  min-height: 1.5rem !important;
+  max-height: 1.5rem !important;
+}
+
+/* Antd 6 Content & Value */
+.common-select .ant-select-content {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 1.5rem !important;
+  line-height: 1.5rem !important;
+}
+
+/* Prevent Antd 6 empty-state pseudo-element from adding a second line */
+.common-select .ant-select-content:before {
+  display: none !important;
+  content: none !important;
+}
+
+.common-select .ant-select-content-value,
+.common-select .ant-select-content-has-value {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  line-height: 1.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.common-select .ant-select-placeholder {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: #D1D5DB !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.common-select .ant-select-suffix {
+  flex-shrink: 0 !important;
+  margin-inline-start: 4px !important;
+  margin-inline-end: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.common-select .ant-select-input {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  position: absolute !important;
+  inset: 0 !important;
+  height: 100% !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+/* Antd 5 Selector, Selection-Item & Selection-Wrap */
+.common-select .ant-select-selector {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  height: 1.5rem !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.common-select .ant-select-selection-wrap {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  flex: 1 1 0% !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 1.5rem !important;
+}
+
+.common-select .ant-select:hover .ant-select-selector,
+.common-select .ant-select-focused .ant-select-selector,
+.common-select .ant-select-selector:focus,
+.common-select .ant-select-selector:hover {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.common-select .ant-select-single .ant-select-selection-item,
+.common-select .ant-select-selection-placeholder,
+.common-select .ant-select-single .ant-select-selection-search {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  inset-inline-start: 0 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  line-height: 1.5rem !important;
+}
+
+/* Single-select placeholder color */
+.common-select .ant-select-selection-placeholder {
+  color: #D1D5DB !important;
+  font-size: 0.875rem !important;
+}
+
+.common-select .ant-select-multiple .ant-select-selector {
+  padding: 0 !important;
+  min-height: 24px !important;
+  align-items: center !important;
+}
+
+.common-select .ant-select-multiple .ant-select-selection-overflow {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 24px !important;
+  width: 100% !important;
+}
+
+.common-select .ant-select-multiple .ant-select-selection-overflow-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  margin: 0 !important;
+}
+
+.common-select .ant-select-multiple .ant-select-selection-item {
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+  background-color: #EDF6F1 !important;
+  border: 1px solid #D5E6DC !important;
+  color: #244034 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  margin: 0 4px 0 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  max-width: 100% !important;
+  line-height: 1.5 !important;
+}
+
+.common-select .ant-select-multiple .ant-select-selection-item-remove {
+  color: #244034 !important;
+  margin-left: 4px !important;
+}
+
+.common-select .ant-select-multiple .ant-select-selection-placeholder {
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  inset-inline-start: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 24px !important;
+  color: #D1D5DB !important;
+}
+
+.common-select .ant-select-multiple .ant-select-selection-search {
+  margin: 0 !important;
+  padding: 0 !important;
+  inset-inline-start: 0 !important;
+  align-self: center !important;
+}
+
+.common-select .ant-select-selection-search-input {
+  padding-left: 0 !important;
+  min-width: 0 !important;
+  height: 24px !important;
+  line-height: 24px !important;
+}
+
+.common-select .ant-select-arrow {
+  right: 0 !important;
+  margin-right: 0 !important;
+  color: #71717A !important;
+  transition: color 200ms ease, transform 200ms ease !important;
+}
+
+.common-select .ant-select-open .ant-select-arrow {
+  color: #244034 !important;
+}
+
+.common-select .ant-select-clear {
+  background: #ffffff !important;
+  color: #9CA3AF !important;
+  transition: color 150ms ease !important;
+}
+
+.common-select .ant-select-clear:hover {
+  color: #244034 !important;
+}
+
+/* Ant Design Select Dropdown Theme Matching */
+.common-select-dropdown,
+.ant-select-dropdown {
+  border-radius: 12px !important;
+  padding: 6px !important;
+  background-color: #ffffff !important;
+  border: 1px solid #E4E4E7 !important;
+  box-shadow: 0 10px 25px -5px rgba(36, 64, 52, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+}
+
+.common-select-dropdown .ant-select-item,
+.ant-select-dropdown .ant-select-item {
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  font-weight: 450 !important;
+  color: #18181B !important;
+  transition: background-color 150ms ease, color 150ms ease !important;
+  cursor: pointer !important;
+}
+
+/* Hover / Active Option */
+.common-select-dropdown .ant-select-item-option-active,
+.ant-select-dropdown .ant-select-item-option-active {
+  background-color: #F4F9F6 !important;
+  color: #244034 !important;
+}
+
+/* Selected Option */
+.common-select-dropdown .ant-select-item-option-selected,
+.ant-select-dropdown .ant-select-item-option-selected {
+  background-color: #EDF6F1 !important;
+  color: #244034 !important;
+  font-weight: 600 !important;
+}
+
+/* Checkmark Icon for Selected Option */
+.common-select-dropdown .ant-select-item-option-selected .ant-select-item-option-state,
+.ant-select-dropdown .ant-select-item-option-selected .ant-select-item-option-state {
+  color: #244034 !important;
+}
+
+/* Group Label in Select Dropdown */
+.common-select-dropdown .ant-select-item-group,
+.ant-select-dropdown .ant-select-item-group {
+  color: #71717A !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 6px 12px 2px 12px !important;
+}
+
+/* Empty State inside Select Dropdown */
+.common-select-dropdown .ant-empty-description,
+.ant-select-dropdown .ant-empty-description {
+  color: #71717A !important;
+  font-size: 13px !important;
+}
+
+/* Ant Design DatePicker overrides in CommonFieldset */
+.common-datepicker {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.common-datepicker .ant-picker,
+.common-datepicker .ant-picker-outlined,
+.common-datepicker .ant-picker-borderless {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+.common-datepicker .ant-picker:hover,
+.common-datepicker .ant-picker-focused,
+.common-datepicker .ant-picker:focus,
+.common-datepicker .ant-picker-input:focus {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.common-datepicker .ant-picker-input {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.common-datepicker .ant-picker-input > input {
+  width: 100% !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  font-size: 14px !important;
+  color: #0D0D12 !important;
+  font-family: var(--font-primary) !important;
+  padding: 0 !important;
+}
+
+.common-datepicker .ant-picker-input > input::placeholder {
+  color: #d1d5db !important;
+  font-size: 14px !important;
+}
+
+.common-datepicker .ant-picker-suffix {
+  margin-inline-start: 8px !important;
+  margin-inline-end: 0 !important;
+  color: #71717a !important;
+  transition: color 0.15s ease;
+}
+
+.common-datepicker:hover .ant-picker-suffix,
+.common-datepicker:focus-within .ant-picker-suffix {
+  color: #244034 !important;
+}
+
+.common-datepicker .ant-picker-clear {
+  background: #ffffff !important;
+  color: #71717a !important;
+  transition: color 0.15s ease;
+}
+
+.common-datepicker .ant-picker-clear:hover {
+  color: #244034 !important;
+}
+
+/* Ant Design DatePicker Popup Dropdown Theme Matching */
+.ant-picker-dropdown {
+  font-family: var(--font-primary) !important;
+}
+
+.ant-picker-dropdown .ant-picker-panel-container {
+  border-radius: 10px !important;
+  border: 1px solid #D5E6DC !important;
+  box-shadow: 0 10px 25px -5px rgba(36, 64, 52, 0.12), 0 8px 10px -6px rgba(36, 64, 52, 0.08) !important;
+}
+
+.ant-picker-dropdown .ant-picker-header-view button:hover {
+  color: #244034 !important;
+}
+
+.ant-picker-dropdown .ant-picker-header button:hover {
+  color: #244034 !important;
+}
+
+.ant-picker-dropdown .ant-picker-cell:hover:not(.ant-picker-cell-selected):not(.ant-picker-cell-disabled) .ant-picker-cell-inner {
+  background: #EDF6F1 !important;
+  color: #244034 !important;
+  border-radius: 6px !important;
+}
+
+.ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before {
+  border: 1px solid #244034 !important;
+  border-radius: 6px !important;
+}
+
+.ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner {
+  color: #244034 !important;
+}
+
+.ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner {
+  background: #244034 !important;
+  color: #ffffff !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+}
+
+.ant-picker-dropdown .ant-picker-today-btn {
+  color: #244034 !important;
+  font-weight: 600 !important;
+}
+
+.ant-picker-dropdown .ant-picker-today-btn:hover {
+  color: #1b3329 !important;
+}
+
+.ant-picker-dropdown .ant-picker-year-btn:hover,
+.ant-picker-dropdown .ant-picker-month-btn:hover,
+.ant-picker-dropdown .ant-picker-decade-btn:hover {
+  color: #244034 !important;
+}
+
+.ant-picker-dropdown .ant-picker-month-panel .ant-picker-cell:hover .ant-picker-cell-inner,
+.ant-picker-dropdown .ant-picker-year-panel .ant-picker-cell:hover .ant-picker-cell-inner {
+  background: #EDF6F1 !important;
+  color: #244034 !important;
+}
+
+.ant-picker-dropdown .ant-picker-month-panel .ant-picker-cell-selected .ant-picker-cell-inner,
+.ant-picker-dropdown .ant-picker-year-panel .ant-picker-cell-selected .ant-picker-cell-inner {
+  background: #244034 !important;
+  color: #ffffff !important;
+}
