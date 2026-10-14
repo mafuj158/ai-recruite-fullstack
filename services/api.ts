@@ -10,7 +10,7 @@ export interface ApiResponse<T = unknown> {
   error?: string;
 }
 
-class ApiError extends Error {
+export class ApiError extends Error {
   status: number;
   data?: unknown;
 

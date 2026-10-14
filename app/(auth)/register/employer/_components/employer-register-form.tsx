@@ -74,7 +74,7 @@ const EmployerRegisterForm = () => {
           register_as="companyName"
           label="Company Name"
           type="text"
-          placeholder="Acme Technologies"
+          placeholder="TechCorp Global"
           isRequired={true}
           errors={errors}
           validationRules={{
@@ -87,7 +87,7 @@ const EmployerRegisterForm = () => {
           register_as="email"
           label="Work Email Address"
           type="email"
-          placeholder="hr@acme.com"
+          placeholder="jane@company.com"
           isRequired={true}
           errors={errors}
           validationRules={{

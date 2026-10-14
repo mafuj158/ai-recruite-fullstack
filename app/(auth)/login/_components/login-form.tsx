@@ -2,16 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import CommonFieldset from "@/components/ui/fieldset";
-import { UserRole } from "@/types/global.types";
 import { LoginFormValues } from "@/types/auth/auth.types";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import SocialAuthButtons from "@/components/shared/social-auth-buttons";
 
 const LoginForm = () => {
-
     const {
         control,
         handleSubmit,
@@ -24,7 +20,7 @@ const LoginForm = () => {
     });
 
     const onSubmit = async (data: LoginFormValues) => {
-        console.log(data)
+        console.log(data);
     };
 
     return (
@@ -93,7 +89,7 @@ const LoginForm = () => {
                 </Link>
             </div>
         </>
-    )
-}
+    );
+};
 
-export default LoginForm
+export default LoginForm;

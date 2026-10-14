@@ -9,10 +9,6 @@ export const metadata: Metadata = {
 };
 
 export default async function LoginPage() {
-
-  // for delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
   return (
     <>
       {/* User Icon Badge */}
@@ -22,7 +18,9 @@ export default async function LoginPage() {
         </div>
       </div>
 
-      <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 text-center">Welcome Back</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 text-center">
+        Welcome Back
+      </h1>
       <p className="text-xs text-zinc-500 text-center mt-1 mb-4 sm:mb-6">
         Sign in to your AI-Recruite account
       </p>

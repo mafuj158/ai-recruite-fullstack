@@ -4,8 +4,8 @@
 > **Audience:** Full-Stack Next.js Engineering Team, Frontend & Backend Engineers, Product Managers, QA Engineers  
 > **Tech Stack:**  
 > - **Frontend & Application Layer:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Ant Design 6, Zustand, React Hook Form (🟢 **100% Complete UI & Client State**)  
-> - **Database & ORM:** Prisma ORM 6.x, PostgreSQL (Neon / Supabase / Local PostgreSQL)  
-> - **Backend Architecture:** Next.js Route Handlers (`app/api/*`) & Server Actions, Better Auth / NextAuth.js (Auth.js v5) RBAC, Vercel AI SDK, OpenAI / Gemini LLMs, Groq Whisper STT, Pusher / Supabase Realtime, Inngest Background Tasks, UploadThing / Cloudinary / AWS S3.
+> - **Database & ORM:** Prisma ORM 7.x, PostgreSQL (Neon Serverless PostgreSQL via `@prisma/adapter-neon` with `DATABASE_URL_UNPOOLED` for migrations)  
+> - **Backend Architecture:** Express-Style Layered Clean Architecture: Thin Next.js Route Handlers (`app/api/*`) ➔ Controllers (`server/controllers/*`) ➔ Services (`server/services/*`) ➔ Prisma Neon DB. Standard API responses via `lib/api-response.ts`. Auth via custom bcryptjs & session cookies. LLM & Speech capabilities via Vercel AI SDK, OpenAI / Gemini, Groq Whisper STT.
 
 ---
 
@@ -626,57 +626,118 @@ sequenceDiagram
 
 ### 5.1 Recommended Next.js Full-Stack Directory Structure
 
-Following the architectural standards defined in [`AGENTS.md`](./AGENTS.md), the entire backend resides within the unified Next.js App Router codebase:
+Following the architectural standards defined in [`AGENTS.md`](./AGENTS.md), the project maintains a strict separation between Frontend Client Services, Backend Express-Style Layers, and Next.js App Router:
 
 ```text
 ai-recruite/
-├── app/
-│   ├── api/                                # Route Handlers (RESTful Endpoints)
-│   │   ├── auth/                           # NextAuth / Better Auth route handler
-│   │   │   └── [...nextauth]/route.ts
-│   │   ├── candidates/
-│   │   │   ├── me/route.ts                 # Candidate profile CRUD
-│   │   │   └── experiences/route.ts        # Work experience CRUD
-│   │   ├── employers/
-│   │   │   └── me/route.ts                 # Employer & company profile CRUD
-│   │   ├── jobs/
-│   │   │   ├── route.ts                    # Job creation & faceted search
-│   │   │   └── [slug]/route.ts             # Single job specification & update
-│   │   ├── applications/
-│   │   │   ├── route.ts                    # Submit application & list candidate jobs
-│   │   │   └── [id]/stage/route.ts         # 5-stage lifecycle state transitions
-│   │   ├── interviews/
-│   │   │   ├── prescreening/[id]/route.ts  # Pre-screening questions & submission
-│   │   │   └── final/route.ts              # Employer final interview scheduling
-│   │   ├── chat/
-│   │   │   ├── conversations/route.ts      # Active message threads
-│   │   │   └── messages/route.ts           # Send & store message
-│   │   ├── notifications/route.ts          # Popover alerts & mark-as-read
-│   │   └── ai/
-│   │       ├── ats-score/route.ts          # CV ATS scoring & keyword analysis
-│   │       ├── rewrite-bullet/route.ts     # STAR diff enhancer
-│   │       ├── optimize-job/route.ts       # Job description optimizer
-│   │       ├── cover-letter/route.ts       # AI cover letter generator
-│   │       └── polish-message/route.ts     # Chat draft tone polisher
-├── lib/
-│   ├── prisma.ts                           # Global Prisma Client singleton
-│   ├── auth.ts                             # NextAuth / Better Auth configuration
-│   ├── ai.ts                               # Vercel AI SDK / OpenAI / Gemini client
-│   └── pusher.ts                           # Pusher Channels real-time broadcaster
+├── app/                                       # Next.js App Router (UI Routes & API Endpoints)
+│   ├── (auth)/                               # Public Auth Pages (login, register, forgot-password)
+│   │   ├── forgot-password/
+│   │   ├── login/
+│   │   └── register/
+│   │       ├── candidate/
+│   │       └── employer/
+│   ├── (candidate)/candidate/                # Candidate Portal (10 Full Pages)
+│   │   ├── ai-interview/                     # AI Pre-screening Interview runner & report
+│   │   ├── applied-jobs/                     # 5-Stage timeline application tracker
+│   │   ├── chat/                             # Direct messaging with AI tone polisher
+│   │   ├── cv-manager/                       # ATS gauge & STAR diff editor
+│   │   ├── dashboard/                        # Candidate overview metrics & recommendations
+│   │   ├── find-jobs/                        # Job search with faceted filters
+│   │   │   └── [job_slug]/                   # Job details & AI application modal
+│   │   ├── interviews/                       # Scheduled final interviews & calendar sync
+│   │   ├── profile/                          # Candidate profile & credentials
+│   │   ├── saved-jobs/                       # Bookmarked jobs
+│   │   └── settings/                         # Candidate preferences & security
+│   ├── (employer)/employer/                  # Employer Portal (8 Full Pages)
+│   │   ├── candidates/                       # Candidate explorer & evaluation drawer
+│   │   ├── chat/                             # Recruiter direct messaging
+│   │   ├── company-profile/                  # Company branding & details
+│   │   ├── dashboard/                        # Hiring funnel metrics & active jobs
+│   │   ├── interviews/                       # Interview scheduling & management
+│   │   ├── my-jobs/                          # Active & draft job postings
+│   │   ├── post-job/                         # Job post wizard with 5 AI weight sliders
+│   │   └── settings/                         # Settings (ai, billing, company, notifications, security, team)
+│   ├── (marketing)/                          # Public Landing Page (/)
+│   ├── (onboarding)/onboarding/              # Post-signup Onboarding Wizards
+│   │   ├── candidate/
+│   │   └── employer/
+│   └── api/                                  # Thin Route Handlers (Delegate to server/controllers/)
+│       └── auth/
+│           ├── login/route.ts                # POST -> delegates to authController.login(req)
+│           ├── register/route.ts             # POST -> delegates to authController.register(req)
+│           ├── resend-verification/route.ts  # POST -> delegates to authController.resendVerification(req)
+│           └── verify-email/route.ts         # GET  -> delegates to authController.verifyEmail(req)
+│
+├── server/                                   # ⚙️ BACKEND ARCHITECTURE (Express-style Clean Layers)
+│   ├── controllers/                          # Controllers: Request parsing, validation, HTTP response
+│   │   └── auth.controller.ts
+│   └── services/                             # Backend Services: Business logic, bcryptjs & Prisma DB access
+│       ├── auth.service.ts
+│       └── mail.service.ts                   # Transactional email dispatcher & HTML template
+│
+├── services/                                 # 🌐 FRONTEND CLIENT SERVICES (Client-side HTTP Fetchers)
+│   ├── api.ts                                # Axios/fetch wrapper with interceptors & typed methods
+│   └── auth/
+│       └── auth.service.ts                   # Client caller for UI forms (calls /api/auth/*)
+│
+├── types/                                    # 🏷️ Centralized TypeScript Definitions (Strictly in root types/)
+│   ├── auth/
+│   │   └── auth.types.ts
+│   ├── candidate/                            # Candidate page-specific type definitions
+│   │   ├── ai-interview.types.ts
+│   │   ├── applied-jobs.types.ts
+│   │   ├── cv-manager.types.ts
+│   │   ├── dashboard.types.ts
+│   │   ├── find-jobs.types.ts
+│   │   ├── interviews.types.ts
+│   │   ├── job-details.types.ts
+│   │   ├── onboarding.types.ts
+│   │   ├── profile.types.ts
+│   │   ├── saved-jobs.types.ts
+│   │   └── settings.types.ts
+│   ├── employer/                             # Employer page-specific type definitions
+│   │   ├── ai-settings.types.ts
+│   │   ├── candidates.types.ts
+│   │   ├── company-profile.types.ts
+│   │   ├── interviews.types.ts
+│   │   ├── my-jobs.types.ts
+│   │   ├── notification.types.ts
+│   │   ├── onboarding.types.ts
+│   │   ├── post-job.types.ts
+│   │   └── schedule-interview.types.ts
+│   ├── chat/
+│   │   └── chat.types.ts
+│   ├── notification/
+│   │   └── notification.types.ts
+│   └── global.types.ts                       # Shared application-wide types
+│
+├── hooks/                                    # 🪝 Custom React Hooks (Created upon real API integration)
+│   └── auth/
+│       └── use-auth.ts
+│
+├── components/                               # Reusable UI & Layout Components
+│   ├── layouts/                              # Header, Sidebar, Footer, Notification dropdown
+│   ├── modals/                               # Global modals (Withdraw, Confirm, etc.)
+│   ├── shared/                               # Cross-portal reusable components
+│   └── ui/                                   # Base primitives & visual elements
+│
+├── lib/                                      # Utilities & Singletons
+│   ├── prisma.ts                             # Global PrismaClient singleton with @prisma/adapter-neon
+│   ├── api-response.ts                       # Standard API response helpers (successResponse, errorResponse)
+│   ├── constants.ts                          # App constants & configurations
+│   └── utils.ts                              # Class merging (cn) & common helpers
+│
 ├── prisma/
-│   ├── schema.prisma                       # Complete PostgreSQL relational schema
-│   ├── migrations/                         # SQL migration history
-│   └── seed.ts                             # Initial demo data seeder
-├── services/                               # Client & Server service callers (AGENTS.md)
-│   ├── auth/auth.service.ts
-│   ├── candidate/
-│   │   ├── cv-manager.service.ts
-│   │   └── saved-jobs.service.ts
-│   └── employer/
-│       ├── post-job.service.ts
-│       └── my-jobs.service.ts
-├── types/                                  # Centralized TypeScript types (AGENTS.md)
-└── store/                                  # Zustand client state slices
+│   └── schema.prisma                         # Prisma 7 PostgreSQL schema (Synced with Neon)
+├── prisma.config.ts                          # Prisma 7 Config (Datasource URL for CLI & Migrations)
+├── providers/                                # Context Providers (Toaster, Theme, AntD Config)
+│   └── toaster.provider.tsx
+├── store/                                    # Zustand Client State Slices
+│   ├── index.ts
+│   └── slices/
+├── public/                                   # Static assets, icons, and illustrations
+└── AGENTS.md                                 # Codebase Guidelines & Architectural Rules
 ```
 
 ---
@@ -687,39 +748,17 @@ ai-recruite/
 erDiagram
     User ||--o| CandidateProfile : "profile for"
     User ||--o| EmployerProfile : "profile for"
-    
-    EmployerProfile ||--o{ Job : "posts"
-    Job ||--o{ Application : "receives"
-    CandidateProfile ||--o{ Application : "submits"
-    
-    CandidateProfile ||--o{ WorkExperience : "has"
-    CandidateProfile ||--o{ Education : "has"
-    CandidateProfile ||--o{ Certification : "has"
-    CandidateProfile ||--o{ SavedJob : "bookmarks"
-    Job ||--o{ SavedJob : "bookmarked in"
-    
-    Application ||--o| InterviewSession : "triggers"
-    InterviewSession ||--o{ InterviewQuestion : "contains"
-    InterviewQuestion ||--o| InterviewAnswer : "answered by"
-    
-    Application ||--o{ FinalInterview : "schedules"
-    
-    User ||--o{ ConversationParticipant : "joins"
-    Conversation ||--o{ ConversationParticipant : "has"
-    Conversation ||--o{ Message : "contains"
-    User ||--o{ AppNotification : "receives"
 ```
 
 ---
 
 ### 5.3 Production Prisma Schema (`prisma/schema.prisma`)
 
-This schema is optimized for **PostgreSQL** and provides complete support for all 18 UI pages, role-based workflows, and AI configurations:
+This schema is optimized for **PostgreSQL on Neon** under **Prisma 7** standards (without deprecated `url` property in `datasource db`):
 
 ```prisma
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -736,454 +775,93 @@ enum Role {
   ADMIN
 }
 
-enum WorkType {
-  REMOTE
-  HYBRID
-  ONSITE
-}
-
-enum ExperienceLevel {
-  ENTRY
-  MID
-  SENIOR
-  LEAD
-  EXECUTIVE
-}
-
-enum JobStatus {
-  ACTIVE
-  DRAFT
-  CLOSED
-  ARCHIVED
-}
-
-enum ApplicationStage {
-  APPLIED
-  AI_PRESCREENING
-  EMPLOYER_REVIEW
-  INTERVIEW
-  HIRED
-  REJECTED
-  WITHDRAWN
-}
-
-enum AnswerMode {
-  VIDEO
-  AUDIO
-  TEXT
-}
-
-enum SessionStatus {
-  PENDING
-  IN_PROGRESS
-  ANALYZING
-  COMPLETED
-}
-
-enum FinalInterviewStatus {
-  UPCOMING
-  COMPLETED
-  CANCELLED
-}
-
-enum MeetingType {
-  VIDEO
-  PHONE
-  IN_PERSON
-}
-
-enum NotificationType {
-  NEW_APPLICATION
-  HIGH_AI_MATCH
-  AI_SCREENING_COMPLETED
-  INTERVIEW_SCHEDULED
-  SHORTLISTED
-  NEW_JOB_MATCH
-  SYSTEM
-}
-
 // ----------------------------------------------------
 // USER & ACCOUNTS
 // ----------------------------------------------------
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  passwordHash  String?
-  role          Role      @default(CANDIDATE)
-  isOnboarded   Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id               String            @id @default(cuid())
+  email            String            @unique
+  passwordHash     String
+  role             Role              @default(CANDIDATE)
+  isOnboarded      Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   candidateProfile CandidateProfile?
   employerProfile  EmployerProfile?
-  
-  participants     ConversationParticipant[]
-  messagesSent     Message[]
-  notifications    AppNotification[]
 
   @@map("users")
 }
 
 // ----------------------------------------------------
-// CANDIDATE PROFILE & HISTORY
+// PROFILES (Created upon Registration)
 // ----------------------------------------------------
 
 model CandidateProfile {
-  id                 String           @id @default(cuid())
-  userId             String           @unique
-  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  fullName           String
-  avatarUrl          String?
-  jobTitle           String?
-  bio                String?          @db.Text
-  phone              String?
-  location           String?
-  workType           WorkType         @default(REMOTE)
-  experienceLevel    ExperienceLevel  @default(MID)
-  salaryExpectation  Decimal?         @db.Decimal(12, 2)
-  skills             Json             @default("[]") // [{ name: "React", level: "Expert" }]
-  
-  // CV & ATS Scoring
-  cvUrl              String?
-  cvName             String?
-  cvAtsScore         Int              @default(0)
-  cvAtsBreakdown     Json             @default("{}") // { formatting: 90, relevance: 85, impact: 88, keywords: 80 }
-  cvExtractedText    String?          @db.Text
-  
-  // Privacy & Preferences
-  discoveryMode      String           @default("public") // "public" | "discreet" | "private"
-  blockedCompanies   Json             @default("[]")
-  
-  experiences        WorkExperience[]
-  educations         Education[]
-  certifications     Certification[]
-  applications       Application[]
-  savedJobs          SavedJob[]
-
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName  String
+  avatarUrl String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("candidate_profiles")
 }
 
-model WorkExperience {
-  id           String           @id @default(cuid())
-  candidateId  String
-  candidate    CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  
-  company      String
-  role         String
-  location     String?
-  startDate    DateTime
-  endDate      DateTime?
-  isCurrent    Boolean          @default(false)
-  description  String?          @db.Text
-
-  @@map("work_experiences")
-}
-
-model Education {
-  id           String           @id @default(cuid())
-  candidateId  String
-  candidate    CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  
-  institution  String
-  degree       String
-  fieldOfStudy String
-  startYear    Int
-  endYear      Int?
-
-  @@map("educations")
-}
-
-model Certification {
-  id                  String           @id @default(cuid())
-  candidateId         String
-  candidate           CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  
-  name                String
-  issuingOrganization String
-  issueDate           DateTime
-  credentialUrl       String?
-
-  @@map("certifications")
-}
-
-// ----------------------------------------------------
-// EMPLOYER PROFILE & SETTINGS
-// ----------------------------------------------------
-
 model EmployerProfile {
-  id                       String    @id @default(cuid())
-  userId                   String    @unique
-  user                     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  hrName                   String
-  companyName              String
-  logoUrl                  String?
-  website                  String?
-  industry                 String?
-  companySize              String?
-  location                 String?
-  about                    String?   @db.Text
-  primaryRoles             Json      @default("[]")
-  workPolicy               String    @default("Hybrid")
-  
-  // AI Recruiter Settings
-  aiThreshold              Int       @default(85)
-  autoTriggerPrescreening  Boolean   @default(true)
-  aiTone                   String    @default("Professional")
-
-  jobs                     Job[]
-
-  createdAt                DateTime  @default(now())
-  updatedAt                DateTime  @updatedAt
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hrName      String
+  companyName String
+  logoUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@map("employer_profiles")
 }
-
-// ----------------------------------------------------
-// JOBS & 5-WEIGHT AI CONFIGURATION
-// ----------------------------------------------------
-
-model Job {
-  id                    String           @id @default(cuid())
-  employerId            String
-  employer              EmployerProfile  @relation(fields: [employerId], references: [id], onDelete: Cascade)
-  
-  slug                  String           @unique
-  title                 String
-  department            String
-  location              String
-  workType              WorkType         @default(REMOTE)
-  employmentType        String           @default("Full-time")
-  salaryMin             Decimal?         @db.Decimal(12, 2)
-  salaryMax             Decimal?         @db.Decimal(12, 2)
-  description           String           @db.Text
-  responsibilities      Json             @default("[]")
-  requirements          Json             @default("[]")
-  skills                Json             @default("[]")
-  experienceLevel       ExperienceLevel  @default(MID)
-  status                JobStatus        @default(ACTIVE)
-  deadline              DateTime?
-  aiOptimizationScore   Int              @default(90)
-  
-  // 5 AI Matching Percentage Sliders (Sum = 100%)
-  weightSkills          Int              @default(30)
-  weightExperience      Int              @default(25)
-  weightRequirements    Int              @default(20)
-  weightEducation       Int              @default(15)
-  weightSoftSkills      Int              @default(10)
-
-  applications          Application[]
-  savedBy               SavedJob[]
-
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
-
-  @@index([status, department])
-  @@map("jobs")
-}
-
-model SavedJob {
-  id          String           @id @default(cuid())
-  candidateId String
-  jobId       String
-  candidate   CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  job         Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  createdAt   DateTime         @default(now())
-
-  @@unique([candidateId, jobId])
-  @@map("saved_jobs")
-}
-
-// ----------------------------------------------------
-// APPLICATIONS & 5-STAGE LIFECYCLE
-// ----------------------------------------------------
-
-model Application {
-  id               String            @id @default(cuid())
-  jobId            String
-  candidateId      String
-  job              Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  candidate        CandidateProfile  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  
-  cvUrl            String
-  coverLetter      String?           @db.Text
-  stage            ApplicationStage  @default(APPLIED)
-  
-  // Multi-variable AI Matching Output
-  matchScore       Int               @default(0)
-  matchBreakdown   Json              @default("{}") // { skills: 92, experience: 85, requirements: 88, education: 75, softSkills: 90 }
-  matchStrengths   Json              @default("[]")
-  matchGaps        Json              @default("[]")
-
-  prescreening     InterviewSession?
-  finalInterviews  FinalInterview[]
-  conversations    Conversation[]
-
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-
-  @@unique([jobId, candidateId])
-  @@index([stage, matchScore])
-  @@map("applications")
-}
-
-// ----------------------------------------------------
-// AI PRE-SCREENING & FINAL INTERVIEWS
-// ----------------------------------------------------
-
-model InterviewSession {
-  id                   String              @id @default(cuid())
-  applicationId        String              @unique
-  application          Application         @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  
-  status               SessionStatus       @default(PENDING)
-  answerMode           AnswerMode          @default(VIDEO)
-  
-  // 4 AI Pillar Competency Scores
-  overallScore         Int?
-  scoreCommunication   Int?
-  scoreConfidence      Int?
-  scoreProblemSolving  Int?
-  scoreTeamwork        Int?
-  strengths            Json                @default("[]")
-  improvementTips      Json                @default("[]")
-  
-  questions            InterviewQuestion[]
-  completedAt          DateTime?
-  createdAt            DateTime            @default(now())
-  updatedAt            DateTime            @updatedAt
-
-  @@map("interview_sessions")
-}
-
-model InterviewQuestion {
-  id             String           @id @default(cuid())
-  sessionId      String
-  session        InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  
-  order          Int              @default(1)
-  questionText   String           @db.Text
-  category       String           @default("Technical") // Technical, Behavioral, Situational
-  
-  answer         InterviewAnswer?
-
-  @@map("interview_questions")
-}
-
-model InterviewAnswer {
-  id              String            @id @default(cuid())
-  questionId      String            @unique
-  question        InterviewQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  
-  mediaUrl        String?           // Storage URL for audio/video
-  textContent     String?           @db.Text // Whisper transcript or direct text
-  durationSeconds Int               @default(0)
-  createdAt       DateTime          @default(now())
-
-  @@map("interview_answers")
-}
-
-model FinalInterview {
-  id                String               @id @default(cuid())
-  applicationId     String
-  application       Application          @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  
-  title             String
-  scheduledAt       DateTime
-  durationMinutes   Int                  @default(45)
-  meetingType       MeetingType          @default(VIDEO)
-  meetingLink       String
-  panelists         Json                 @default("[]") // [{ name: "Sarah", role: "Lead" }]
-  invitationMessage String?              @db.Text
-  status            FinalInterviewStatus @default(UPCOMING)
-
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
-
-  @@map("final_interviews")
-}
-
-// ----------------------------------------------------
-// REAL-TIME CHAT & NOTIFICATIONS
-// ----------------------------------------------------
-
-model Conversation {
-  id            String                    @id @default(cuid())
-  applicationId String?
-  application   Application?              @relation(fields: [applicationId], references: [id], onDelete: SetNull)
-  
-  participants  ConversationParticipant[]
-  messages      Message[]
-
-  createdAt     DateTime                  @default(now())
-  updatedAt     DateTime                  @updatedAt
-
-  @@map("conversations")
-}
-
-model ConversationParticipant {
-  id             String       @id @default(cuid())
-  conversationId String
-  userId         String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lastReadAt     DateTime     @default(now())
-
-  @@unique([conversationId, userId])
-  @@map("conversation_participants")
-}
-
-model Message {
-  id             String       @id @default(cuid())
-  conversationId String
-  senderId       String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  
-  content        String       @db.Text
-  isAiAssisted   Boolean      @default(false)
-  createdAt      DateTime     @default(now())
-
-  @@map("messages")
-}
-
-model AppNotification {
-  id        String           @id @default(cuid())
-  userId    String
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  type      NotificationType @default(SYSTEM)
-  title     String
-  message   String
-  linkUrl   String?
-  isRead    Boolean          @default(false)
-  createdAt DateTime         @default(now())
-
-  @@index([userId, isRead])
-  @@map("app_notifications")
-}
 ```
 
-#### Singleton Prisma Client (`lib/prisma.ts`)
+#### Prisma 7 CLI & Migration Configuration (`prisma.config.ts`)
 ```typescript
-import { PrismaClient } from "@prisma/client";
+import 'dotenv/config';
+import { defineConfig, env } from 'prisma/config';
+
+export default defineConfig({
+  schema: 'prisma/schema.prisma',
+  datasource: {
+    url: env('DATABASE_URL_UNPOOLED'),
+  },
+});
+```
+
+#### Singleton Prisma Client with Neon Adapter (`lib/prisma.ts`)
+```typescript
+import 'dotenv/config';
+import { PrismaClient } from '@prisma/client';
+import { PrismaNeon } from '@prisma/adapter-neon';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+const adapter = new PrismaNeon({
+  connectionString: process.env.DATABASE_URL!,
+});
+
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+    adapter,
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   });
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+
+export default prisma;
 ```
 
 ---
@@ -1192,58 +870,63 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 ### 6.1 Authentication & Profile APIs
 
-#### `POST /api/auth/register/candidate/`
-* **Request:**
+#### `POST /api/auth/register`
+Unified registration route handling both Candidates and Employers with server-side validation, password hashing (`bcryptjs`), and transactional creation in Neon PostgreSQL.
+
+* **Candidate Request (`role: "CANDIDATE"`):**
 ```json
 {
-  "fullName": "Alex Rivera",
   "email": "alex.rivera@example.com",
   "password": "SecurePassword123!",
-  "confirmPassword": "SecurePassword123!"
+  "role": "CANDIDATE",
+  "fullName": "Alex Rivera"
 }
 ```
-* **Response (201 Created):**
+* **Candidate Response (201 Created):**
 ```json
 {
+  "success": true,
+  "message": "Account created successfully!",
   "user": {
-    "id": 101,
+    "id": "cm8...cuid",
     "email": "alex.rivera@example.com",
-    "role": "candidate",
-    "fullName": "Alex Rivera",
-    "isOnboarded": false
-  },
-  "tokens": {
-    "access": "eyJhbGciOi...",
-    "refresh": "eyJhbGciOi..."
+    "role": "CANDIDATE",
+    "isOnboarded": false,
+    "createdAt": "2026-10-14T12:00:00.000Z",
+    "candidateProfile": {
+      "id": "cm8...cuid",
+      "fullName": "Alex Rivera"
+    }
   }
 }
 ```
 
-#### `POST /api/auth/register/employer/`
-* **Request:**
+* **Employer Request (`role: "EMPLOYER"`):**
 ```json
 {
-  "hrName": "Sarah Jenkins",
-  "companyName": "TechCorp Global",
   "email": "s.jenkins@techcorp.com",
   "password": "SecurePassword123!",
-  "confirmPassword": "SecurePassword123!"
+  "role": "EMPLOYER",
+  "hrName": "Sarah Jenkins",
+  "companyName": "TechCorp Global"
 }
 ```
-* **Response (201 Created):**
+* **Employer Response (201 Created):**
 ```json
 {
+  "success": true,
+  "message": "Account created successfully!",
   "user": {
-    "id": 201,
+    "id": "cm8...cuid",
     "email": "s.jenkins@techcorp.com",
-    "role": "employer",
-    "hrName": "Sarah Jenkins",
-    "companyName": "TechCorp Global",
-    "isOnboarded": false
-  },
-  "tokens": {
-    "access": "eyJhbGciOi...",
-    "refresh": "eyJhbGciOi..."
+    "role": "EMPLOYER",
+    "isOnboarded": false,
+    "createdAt": "2026-10-14T12:00:00.000Z",
+    "employerProfile": {
+      "id": "cm8...cuid",
+      "hrName": "Sarah Jenkins",
+      "companyName": "TechCorp Global"
+    }
   }
 }
 ```
