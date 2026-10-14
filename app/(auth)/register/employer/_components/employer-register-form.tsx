@@ -59,7 +59,7 @@ const EmployerRegisterForm = () => {
         <CommonFieldset<EmployerRegisterFormValues>
           control={control}
           register_as="hrName"
-          label="Your Full Name (HR / Recruiter)"
+          label="Full Name (HR / Recruiter)"
           type="text"
           placeholder="Jane Doe"
           isRequired={true}

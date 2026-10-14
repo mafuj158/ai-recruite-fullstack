@@ -6,23 +6,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { email, role, fullName, hrName, companyName } = body;
 
+    console.log(body)
     if (!email || !role) {
       return errorResponse("Email and role are required", 400);
     }
 
-    // Starter template: in live flow, create User and Profile in DB via Prisma
-    const mockCreatedUser = {
-      id: "usr_" + Math.random().toString(36).substring(2, 9),
-      email,
-      role,
-      name: role === "CANDIDATE" ? fullName : `${hrName} (${companyName})`,
-      isOnboarded: false,
-      createdAt: new Date().toISOString(),
-    };
 
-    return successResponse(mockCreatedUser, "User registered successfully", 201);
+
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Registration failed";
-    return errorResponse(message, 500);
+
   }
 }

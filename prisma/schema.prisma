@@ -43,7 +43,6 @@ model CandidateProfile {
   id        String   @id @default(cuid())
   userId    String   @unique
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   fullName  String
   avatarUrl String?
   phone     String?
@@ -57,7 +56,6 @@ model EmployerProfile {
   id          String   @id @default(cuid())
   userId      String   @unique
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   hrName      String
   companyName String
   logoUrl     String?
