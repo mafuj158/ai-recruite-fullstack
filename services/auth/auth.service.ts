@@ -24,6 +24,10 @@ export const authService = {
     });
   },
 
+  resendVerification: async (email: string) => {
+    return api.post("/api/auth/resend-verification", { email });
+  },
+
   getCurrentUser: async () => {
     return api.get("/api/auth/me");
   },
