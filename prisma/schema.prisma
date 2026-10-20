@@ -21,19 +21,19 @@ enum Role {
 // ----------------------------------------------------
 
 model User {
-  id                 String    @id @default(cuid())
-  email              String    @unique
+  id                 String            @id @default(cuid())
+  email              String            @unique
   passwordHash       String
-  role               Role      @default(CANDIDATE)
-  isEmailVerified    Boolean   @default(false)
-  emailVerifyToken   String?   @unique
+  role               Role              @default(CANDIDATE)
+  isEmailVerified    Boolean           @default(false)
+  emailVerifyToken   String?           @unique
   emailVerifyExpires DateTime?
-  isOnboarded        Boolean   @default(false)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  isOnboarded        Boolean           @default(false)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
-  candidateProfile CandidateProfile?
-  employerProfile  EmployerProfile?
+  candidateProfile   CandidateProfile?
+  employerProfile    EmployerProfile?
 
   @@map("users")
 }
