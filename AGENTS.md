@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## 1. Project Directory Structure & Organization
 
-The codebase strictly follows a clean full-stack Next.js architecture separating Frontend Client layers from Backend Express-style Server layers:
+The codebase follows the standard Next.js 16 (App Router) full-stack architecture with Prisma ORM and Neon PostgreSQL:
 
 ```text
 ai-recruite/
@@ -48,19 +48,12 @@ ai-recruite/
 │   ├── (onboarding)/onboarding/              # Post-signup Onboarding Wizards
 │   │   ├── candidate/
 │   │   └── employer/
-│   └── api/                                  # Thin Route Handlers (Delegate to server/controllers/)
+│   └── api/                                  # Next.js Route Handlers (Full-Stack Backend API Endpoints)
 │       └── auth/
-│           ├── login/route.ts                # POST -> delegates to authController.login(req)
-│           ├── register/route.ts             # POST -> delegates to authController.register(req)
-│           ├── resend-verification/route.ts  # POST -> delegates to authController.resendVerification(req)
-│           └── verify-email/route.ts         # GET  -> delegates to authController.verifyEmail(req)
-│
-├── server/                                   # ⚙️ BACKEND ARCHITECTURE (Express-style Clean Layers)
-│   ├── controllers/                          # Controllers: Request parsing, validation, HTTP response
-│   │   └── auth.controller.ts
-│   └── services/                             # Backend Services: Business logic, bcryptjs & Prisma DB access
-│       ├── auth.service.ts
-│       └── mail.service.ts                   # Transactional email dispatcher & HTML template
+│           ├── login/route.ts                # POST -> Password check & email verification check
+│           ├── register/route.ts             # POST -> Validation, bcrypt hash, Prisma create, Resend email
+│           ├── resend-verification/route.ts  # POST -> Re-generate token & send verification email
+│           └── verify-email/route.ts         # GET  -> Verify token & activate isEmailVerified
 │
 ├── services/                                 # 🌐 FRONTEND CLIENT SERVICES (Client-side HTTP Fetchers)
 │   ├── api.ts                                # Axios/fetch wrapper with interceptors & typed methods
@@ -104,12 +97,13 @@ ai-recruite/
 │
 ├── components/                               # Reusable UI & Layout Components
 │   ├── layouts/                              # Header, Sidebar, Footer, Notification dropdown
-│   ├── modals/                               # Global modals (Withdraw, Confirm, etc.)
+│   ├── modals/                               # Global modals (VerifyEmailModal, Withdraw, Confirm, etc.)
 │   ├── shared/                               # Cross-portal reusable components
 │   └── ui/                                   # Base primitives & visual elements
 │
-├── lib/                                      # Utilities & Singletons
+├── lib/                                      # Utilities & Shared Backend Helpers
 │   ├── prisma.ts                             # Global PrismaClient singleton with @prisma/adapter-neon
+│   ├── mail.ts                               # Resend email dispatcher & HTML template
 │   ├── api-response.ts                       # Standard API response helpers (successResponse, errorResponse)
 │   ├── constants.ts                          # App constants & configurations
 │   └── utils.ts                              # Class merging (cn) & common helpers
@@ -160,30 +154,18 @@ ai-recruite/
 
 ---
 
-## 4. Backend Architecture & Clean Separation (`server/` & `app/api/`)
-The backend follows an Express-style Layered Clean Architecture (Route ➔ Controller ➔ Service ➔ Database):
+## 4. Full-Stack Backend Architecture (Standard Next.js App Router)
+The backend follows standard Next.js App Router patterns without extra Express-style controller/service boilerplate:
 
-- **Route Layer (`app/api/<module>/.../route.ts`):**
-  - Next.js App Router Route Handlers act strictly as thin entry points.
-  - Do NOT write business or database logic inside `route.ts`.
-  - Simply delegate the request to the corresponding controller:
-    ```typescript
-    import { NextRequest } from "next/server";
-    import { authController } from "@/server/controllers/auth.controller";
-
-    export async function POST(req: NextRequest) {
-      return authController.register(req);
-    }
-    ```
-
-- **Controller Layer (`server/controllers/<module>.controller.ts`):**
-  - Responsible for HTTP request parsing (`req.json()`, `req.nextUrl.searchParams`), input validation, and sending HTTP responses (`NextResponse.json(...)` or `successResponse`/`errorResponse` from `@/lib/api-response`).
-  - Calls the backend service to perform business logic.
-  - Catches domain errors (`AuthError`, etc.) and maps them to appropriate HTTP status codes (`400`, `401`, `404`, `409`, `500`).
-
-- **Service Layer (`server/services/<module>.service.ts`):**
-  - Contains pure backend business logic, password hashing (`bcryptjs`), and database operations via Prisma (`@/lib/prisma`).
-  - Never import `NextResponse` or client-side packages here. Throws typed/custom errors for the controller to handle.
+- **Route Handlers (`app/api/<module>/.../route.ts`):**
+  - Act as standard API endpoints using `export async function GET/POST/PUT/DELETE(req: NextRequest)`.
+  - Handle request body parsing (`await req.json()`), input validation, business logic, password hashing (`bcryptjs`), and database operations via Prisma (`@/lib/prisma`).
+  - Standard JSON responses are returned using `successResponse` and `errorResponse` from `@/lib/api-response`.
+  - Email sending is handled via `@/lib/mail`.
+- **Reusable Server Helpers (`lib/`):**
+  - Database client singleton: `lib/prisma.ts` (PrismaClient with `@prisma/adapter-neon`).
+  - Transactional email dispatcher: `lib/mail.ts` (Resend SDK).
+  - API response formatting: `lib/api-response.ts`.
 
 ---
 

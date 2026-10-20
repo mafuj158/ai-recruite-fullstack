@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 
 /**
- * Mail Service for AI-Recruite
+ * Mail Helper for AI-Recruite
  * Dispatches transactional emails using Resend SDK
  */
 
@@ -18,12 +18,11 @@ const getResendClient = () => {
   return new Resend(apiKey);
 };
 
-export const mailService = {
-  /**
-   * Generates responsive dark-mode HTML email template for verification
-   */
-  getVerificationHtmlTemplate(name: string, verifyUrl: string): string {
-    return `
+/**
+ * Generates responsive dark-mode HTML email template for verification
+ */
+export function getVerificationHtmlTemplate(name: string, verifyUrl: string): string {
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -94,59 +93,56 @@ export const mailService = {
   </table>
 </body>
 </html>
-    `;
-  },
+  `;
+}
 
-  /**
-   * Dispatches verification email via Resend SDK
-   */
-  async sendVerificationEmail({ to, name, token }: SendVerificationEmailParams) {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.APP_URL ||
-      "http://localhost:3000";
+/**
+ * Dispatches verification email via Resend SDK
+ */
+export async function sendVerificationEmail({ to, name, token }: SendVerificationEmailParams) {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.APP_URL ||
+    "http://localhost:3000";
 
-    const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${token}`;
-    const htmlContent = this.getVerificationHtmlTemplate(name, verifyUrl);
+  const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${token}`;
+  const htmlContent = getVerificationHtmlTemplate(name, verifyUrl);
 
-    // 1. In development, always print the direct link to the terminal console for easy testing
-    console.log("\n=======================================================");
-    console.log(`✉️  [EMAIL VERIFICATION DISPATCHED] to: ${to}`);
-    console.log(`👤 Name: ${name}`);
-    console.log(`🔗 Click/Paste link to verify:`);
-    console.log(`   ${verifyUrl}`);
-    console.log("=======================================================\n");
+  // 1. In development, always print the direct link to the terminal console for easy testing
+  console.log("\n=======================================================");
+  console.log(`✉️  [EMAIL VERIFICATION DISPATCHED] to: ${to}`);
+  console.log(`👤 Name: ${name}`);
+  console.log(`🔗 Click/Paste link to verify:`);
+  console.log(`   ${verifyUrl}`);
+  console.log("=======================================================\n");
 
-    // 2. Dispatch email via Resend SDK
-    const resend = getResendClient();
-    if (resend) {
-      try {
-        const fromAddress =
-          process.env.EMAIL_FROM || "AI Recruite <onboarding@resend.dev>";
+  // 2. Dispatch email via Resend SDK
+  const resend = getResendClient();
+  if (resend) {
+    try {
+      const fromAddress =
+        process.env.EMAIL_FROM || "AI Recruite <onboarding@resend.dev>";
 
-        const { data, error } = await resend.emails.send({
-          from: fromAddress,
-          to: [to],
-          subject: "Verify Your Account - AI Recruite",
-          html: htmlContent,
-        });
+      const { data, error } = await resend.emails.send({
+        from: fromAddress,
+        to: [to],
+        subject: "Verify Your Account - AI Recruite",
+        html: htmlContent,
+      });
 
-        if (error) {
-          console.error("[MailService:Resend] Error sending email:", error);
-        } else {
-          console.log(`[MailService:Resend] Email sent successfully, ID: ${data?.id}`);
-        }
-      } catch (err) {
-        console.error("[MailService:Resend] Unexpected exception:", err);
+      if (error) {
+        console.error("[MailHelper:Resend] Error sending email:", error);
+      } else {
+        console.log(`[MailHelper:Resend] Email sent successfully, ID: ${data?.id}`);
       }
-    } else {
-      console.log(
-        "ℹ️ [MailService] RESEND_API_KEY is not configured in .env. Email link printed above for testing."
-      );
+    } catch (err) {
+      console.error("[MailHelper:Resend] Unexpected exception:", err);
     }
+  } else {
+    console.log(
+      "ℹ️ [MailHelper] RESEND_API_KEY is not configured in .env. Email link printed above for testing."
+    );
+  }
 
-    return { success: true, verifyUrl };
-  },
-};
-
-export default mailService;
+  return { success: true, verifyUrl };
+}

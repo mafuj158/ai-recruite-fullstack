@@ -5,7 +5,7 @@
 > **Tech Stack:**  
 > - **Frontend & Application Layer:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Ant Design 6, Zustand, React Hook Form (🟢 **100% Complete UI & Client State**)  
 > - **Database & ORM:** Prisma ORM 7.x, PostgreSQL (Neon Serverless PostgreSQL via `@prisma/adapter-neon` with `DATABASE_URL_UNPOOLED` for migrations)  
-> - **Backend Architecture:** Express-Style Layered Clean Architecture: Thin Next.js Route Handlers (`app/api/*`) ➔ Controllers (`server/controllers/*`) ➔ Services (`server/services/*`) ➔ Prisma Neon DB. Standard API responses via `lib/api-response.ts`. Auth via custom bcryptjs & session cookies. LLM & Speech capabilities via Vercel AI SDK, OpenAI / Gemini, Groq Whisper STT.
+> - **Backend Architecture:** Standard Next.js App Router Full-Stack Architecture: Next.js Route Handlers (`app/api/*`), Prisma Neon DB, bcryptjs password hashing, Resend email service (`lib/mail.ts`), standard JSON API responses via `lib/api-response.ts`. LLM & Speech capabilities via Vercel AI SDK, OpenAI / Gemini, Groq Whisper STT.
 
 ---
 
@@ -662,19 +662,12 @@ ai-recruite/
 │   ├── (onboarding)/onboarding/              # Post-signup Onboarding Wizards
 │   │   ├── candidate/
 │   │   └── employer/
-│   └── api/                                  # Thin Route Handlers (Delegate to server/controllers/)
+│   └── api/                                  # Next.js Route Handlers (Full-Stack Backend API Endpoints)
 │       └── auth/
-│           ├── login/route.ts                # POST -> delegates to authController.login(req)
-│           ├── register/route.ts             # POST -> delegates to authController.register(req)
-│           ├── resend-verification/route.ts  # POST -> delegates to authController.resendVerification(req)
-│           └── verify-email/route.ts         # GET  -> delegates to authController.verifyEmail(req)
-│
-├── server/                                   # ⚙️ BACKEND ARCHITECTURE (Express-style Clean Layers)
-│   ├── controllers/                          # Controllers: Request parsing, validation, HTTP response
-│   │   └── auth.controller.ts
-│   └── services/                             # Backend Services: Business logic, bcryptjs & Prisma DB access
-│       ├── auth.service.ts
-│       └── mail.service.ts                   # Transactional email dispatcher & HTML template
+│           ├── login/route.ts                # POST -> Password check & email verification check
+│           ├── register/route.ts             # POST -> Validation, bcrypt hash, Prisma create, Resend email
+│           ├── resend-verification/route.ts  # POST -> Re-generate token & send verification email
+│           └── verify-email/route.ts         # GET  -> Verify token & activate isEmailVerified
 │
 ├── services/                                 # 🌐 FRONTEND CLIENT SERVICES (Client-side HTTP Fetchers)
 │   ├── api.ts                                # Axios/fetch wrapper with interceptors & typed methods
@@ -722,8 +715,9 @@ ai-recruite/
 │   ├── shared/                               # Cross-portal reusable components
 │   └── ui/                                   # Base primitives & visual elements
 │
-├── lib/                                      # Utilities & Singletons
+├── lib/                                      # Utilities & Shared Backend Helpers
 │   ├── prisma.ts                             # Global PrismaClient singleton with @prisma/adapter-neon
+│   ├── mail.ts                               # Resend email dispatcher & HTML template
 │   ├── api-response.ts                       # Standard API response helpers (successResponse, errorResponse)
 │   ├── constants.ts                          # App constants & configurations
 │   └── utils.ts                              # Class merging (cn) & common helpers
