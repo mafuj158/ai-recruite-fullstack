@@ -4,7 +4,9 @@ export type {
   RegisterRequestPayload,
 } from "./register.types";
 
-export type AuthRole = "CANDIDATE" | "EMPLOYER" | "ADMIN";
+import type { UserRoleType } from "@/constants/roles";
+
+export type AuthRole = UserRoleType;
 
 export interface CandidateProfileData {
   id: string;

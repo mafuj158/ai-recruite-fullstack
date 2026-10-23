@@ -9,6 +9,7 @@ import {
   LoginResponseData,
   ValidationErrorItem,
 } from "@/types";
+import { USER_ROLES } from "@/constants";
 
 export async function POST(req: NextRequest) {
   try {
@@ -119,17 +120,17 @@ export async function POST(req: NextRequest) {
     // ৬. রোল এবং অনবোর্ডিং স্ট্যাটাস অনুযায়ী রিডাইরেক্ট ইউআরএল নির্ধারণ
     let redirectTo = "/";
     if (!user.isOnboarded) {
-      if (user.role === "EMPLOYER") {
+      if (user.role === USER_ROLES.EMPLOYER) {
         redirectTo = "/onboarding/employer";
-      } else if (user.role === "ADMIN") {
+      } else if (user.role === USER_ROLES.ADMIN) {
         redirectTo = "/admin/dashboard";
       } else {
         redirectTo = "/onboarding/candidate";
       }
     } else {
-      if (user.role === "EMPLOYER") {
+      if (user.role === USER_ROLES.EMPLOYER) {
         redirectTo = "/employer/dashboard";
-      } else if (user.role === "ADMIN") {
+      } else if (user.role === USER_ROLES.ADMIN) {
         redirectTo = "/admin/dashboard";
       } else {
         redirectTo = "/candidate/dashboard";

@@ -1,16 +1,26 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import CommonFieldset from "@/components/ui/fieldset";
-
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import SocialAuthButtons from "@/components/shared/social-auth-buttons";
 import { LoginRequestPayload } from "@/types";
 import { useLogin } from "@/hooks/login.hook";
+import { USER_ROLES } from "@/constants";
+import ResendEmailModal from "./resend-email-modal";
+import toast from "react-hot-toast";
+import api from "@/lib/axios-client";
 
 const LoginForm = () => {
+    const router = useRouter();
+    const searchParams = useSearchParams();
 
+    // state
+    const [isResendModalOpen, setIsResendModalOpen] = useState(false);
+    const [unverifiedEmail, setUnverifiedEmail] = useState("");
 
     // hooks
     const {
@@ -26,28 +36,45 @@ const LoginForm = () => {
         },
         mode: "onBlur",
     });
-    const { login, loginAsync, isPending, data } = useLogin();
-
+    const { loginAsync, isPending } = useLogin();
 
     // check user has touched the fields or not
     const isLoginButtonDisabled = isPending || Object.keys(errors)?.length > 0 || !watch('email') || !watch('password');
 
-
     // handle form submission
     const onSubmit = (data: LoginRequestPayload) => {
-
         loginAsync(data, {
-            onSuccess: (data) => {
-                console.log(data);
+            onSuccess: (res) => {
+                toast.success(res?.message || "Login successful!");
 
+                // Check for callback or protected redirect URL
+                const callbackUrl = searchParams.get("redirect") || searchParams.get("from");
+
+                // Get role-wise and onboarding-wise destination from API response or fallback
+                const user = res?.data?.user;
+                const isEmployer = user?.role === USER_ROLES.EMPLOYER;
+                const destination =
+                    callbackUrl ||
+                    res?.data?.redirectTo ||
+                    (!user?.isOnboarded
+                        ? isEmployer
+                            ? "/onboarding/employer"
+                            : "/onboarding/candidate"
+                        : isEmployer
+                            ? "/employer/dashboard"
+                            : "/candidate/dashboard");
+
+                router.push(destination);
+                router.refresh();
             },
             onError: (error) => {
                 const responseData = error.response?.data;
                 const errors = responseData?.errors;
 
                 if (!responseData?.isEmailVerified) {
-                    // show modal
-                    console.log(errors);
+                    setUnverifiedEmail(responseData?.data?.email || data.email);
+                    setIsResendModalOpen(true);
+                    return;
                 }
 
                 if (errors && errors.length > 0) {
@@ -57,14 +84,13 @@ const LoginForm = () => {
                             message: err.message,
                         });
                     });
+                    return
                 }
+
+                toast.error("Something went wrong. Please try again later.");
 
             }
         });
-
-
-
-
     };
 
     return (
@@ -132,6 +158,24 @@ const LoginForm = () => {
                     Employer
                 </Link>
             </div>
+
+            {/* Resend Email Verification Modal */}
+            <ResendEmailModal
+                isOpen={isResendModalOpen}
+                onClose={() => setIsResendModalOpen(false)}
+                email={unverifiedEmail}
+                onResend={async (email) => {
+                    try {
+                        const res = await api.post("/auth/resend-verification", { email });
+                        toast.success(res?.data?.message || "Verification email sent successfully!");
+                        setIsResendModalOpen(false);
+                    } catch (err: any) {
+                        toast.error(
+                            err?.response?.data?.message || "Failed to resend verification email."
+                        );
+                    }
+                }}
+            />
         </>
     );
 };

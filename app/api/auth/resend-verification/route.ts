@@ -3,6 +3,7 @@ import crypto from "crypto";
 import prisma from "@/lib/prisma";
 import { sendVerificationEmail } from "@/lib/mail";
 import { successResponse, errorResponse } from "@/lib/api-response";
+import { USER_ROLES } from "@/constants";
 
 export async function POST(req: NextRequest) {
   try {
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
     });
 
     const displayName =
-      user.role === "EMPLOYER"
+      user.role === USER_ROLES.EMPLOYER
         ? user.employerProfile?.fullName || "Recruiter"
         : user.candidateProfile?.fullName || "Candidate";
 

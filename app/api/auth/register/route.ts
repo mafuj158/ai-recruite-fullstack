@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { sendVerificationEmail } from "@/lib/mail";
 import { successResponse, errorResponse } from "@/lib/api-response";
+import { USER_ROLES } from "@/constants";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
       return errorResponse("Password must be at least 6 characters long.", 400);
     }
 
-    if (role !== "CANDIDATE" && role !== "EMPLOYER") {
+    if (role !== USER_ROLES.CANDIDATE && role !== USER_ROLES.EMPLOYER) {
       return errorResponse("Role must be either CANDIDATE or EMPLOYER.", 400);
     }
 
@@ -51,12 +52,12 @@ export async function POST(req: NextRequest) {
 
     // 6. Create User and Role-specific Profile in Neon PostgreSQL
     let user;
-    if (role === "EMPLOYER") {
+    if (role === USER_ROLES.EMPLOYER) {
       user = await prisma.user.create({
         data: {
           email: normalizedEmail,
           passwordHash,
-          role: "EMPLOYER",
+          role: USER_ROLES.EMPLOYER,
           isEmailVerified: false,
           emailVerifyToken: verificationToken,
           emailVerifyExpires: verificationExpires,
@@ -88,7 +89,7 @@ export async function POST(req: NextRequest) {
         data: {
           email: normalizedEmail,
           passwordHash,
-          role: "CANDIDATE",
+          role: USER_ROLES.CANDIDATE,
           isEmailVerified: false,
           emailVerifyToken: verificationToken,
           emailVerifyExpires: verificationExpires,
