@@ -63,8 +63,9 @@ export default function RootLayout({
       lang="en"
       data-scroll-behavior="smooth"
       className={`${inter.variable} ${ebGaramond.variable} antialiased`}
+      suppressHydrationWarning
     >
-      <body>
+      <body suppressHydrationWarning>
         <QueryProvider>
           <AntdRegistry>
             <ConfigProvider

@@ -141,6 +141,8 @@ export async function POST(req: NextRequest) {
     const tokenPayload = {
       user_id: user.id,
       email: user.email,
+      role: user.role,
+      isOnboarded: user.isOnboarded,
     };
 
     const accessToken = generateAccessToken(tokenPayload);

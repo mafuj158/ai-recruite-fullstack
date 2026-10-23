@@ -7,12 +7,6 @@ export const metadata: Metadata = {
     "Set up your company profile, industry, size, and location on AI-Recruite to start posting jobs and reviewing AI candidate assessments.",
 };
 
-export default async function EmployerOnboardingPage() {
-
-  // for delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  return (
-    <EmployerOnboardingStepper />
-  )
+export default function EmployerOnboardingPage() {
+  return <EmployerOnboardingStepper />;
 }

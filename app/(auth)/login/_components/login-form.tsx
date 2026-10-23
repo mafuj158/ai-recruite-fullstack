@@ -21,6 +21,7 @@ const LoginForm = () => {
     // state
     const [isResendModalOpen, setIsResendModalOpen] = useState(false);
     const [unverifiedEmail, setUnverifiedEmail] = useState("");
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
     // hooks
     const {
@@ -39,13 +40,19 @@ const LoginForm = () => {
     const { loginAsync, isPending } = useLogin();
 
     // check user has touched the fields or not
-    const isLoginButtonDisabled = isPending || Object.keys(errors)?.length > 0 || !watch('email') || !watch('password');
+    const isLoginButtonDisabled =
+        isPending ||
+        isRedirecting ||
+        Object.keys(errors)?.length > 0 ||
+        !watch("email") ||
+        !watch("password");
 
     // handle form submission
     const onSubmit = (data: LoginRequestPayload) => {
         loginAsync(data, {
             onSuccess: (res) => {
-                toast.success(res?.message || "Login successful!");
+                setIsRedirecting(true);
+                toast.success(res?.message || "Login successful! Redirecting...");
 
                 // Check for callback or protected redirect URL
                 const callbackUrl = searchParams.get("redirect") || searchParams.get("from");
@@ -64,8 +71,7 @@ const LoginForm = () => {
                             ? "/employer/dashboard"
                             : "/candidate/dashboard");
 
-                router.push(destination);
-                router.refresh();
+                router.replace(destination);
             },
             onError: (error) => {
                 const responseData = error.response?.data;
@@ -140,8 +146,14 @@ const LoginForm = () => {
                     </Link>
                 </div>
 
-                <Button type="submit" variant="primary" disabled={isLoginButtonDisabled} className="w-full text-xs sm:text-sm py-3 sm:py-3.5 rounded" isLoading={isPending}>
-                    Sign In
+                <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={isLoginButtonDisabled}
+                    className="w-full text-xs sm:text-sm py-3 sm:py-3.5 rounded"
+                    isLoading={isPending || isRedirecting}
+                >
+                    {isRedirecting ? "Redirecting..." : "Sign In"}
                 </Button>
             </form>
             {/* Footer */}

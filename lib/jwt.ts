@@ -10,29 +10,35 @@ const REFRESH_TOKEN_EXPIRES_IN = (process.env.AI_RECRUITE_REFRESH_TOKEN_EXPIRES_
 export interface TokenPayload {
     user_id: string;
     email: string;
+    role: string;
+    isOnboarded?: boolean;
 }
 
-
 // Access Token তৈরি (যেমন: ১ দিন মেয়াদ)
-
 export const generateAccessToken = (payload: TokenPayload) => {
     return jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN });
 }
 
 // Refresh Token তৈরি (যেমন: ৭ দিন মেয়াদ)
-
 export const generateRefreshToken = (payload: TokenPayload) => {
     return jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN });
 }
 
 // Access Token ভেরিফাই করা
-
-export const verifyAccessToken = (token: string) => {
+export const verifyAccessToken = (token: string): TokenPayload => {
     return jwt.verify(token, ACCESS_TOKEN_SECRET) as TokenPayload;
 }
 
-// Refresh Token ভেরিফাই করা
+// নিরাপদ ভেরিফিকেশন (ব্যর্থ হলে null রিটার্ন করবে)
+export const safeVerifyToken = (token: string): TokenPayload | null => {
+    try {
+        return jwt.verify(token, ACCESS_TOKEN_SECRET) as TokenPayload;
+    } catch {
+        return null;
+    }
+}
 
-export const verifyRefreshToken = (token: string) => {
+// Refresh Token ভেরিফাই করা
+export const verifyRefreshToken = (token: string): TokenPayload => {
     return jwt.verify(token, REFRESH_TOKEN_SECRET) as TokenPayload;
 }
