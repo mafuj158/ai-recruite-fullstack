@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
         {
           success: false,
           message: "Validation failed",
+          errorCode: "VALIDATION_FAILED",
           errors,
           status: httpStatus.BAD_REQUEST,
         },
@@ -73,6 +74,7 @@ export async function POST(req: NextRequest) {
         {
           success: false,
           message: "Invalid email or password",
+          errorCode: "INVALID_CREDENTIALS",
           errors: [{ field: "email", message: "Invalid email or password" }],
           status: httpStatus.UNAUTHORIZED,
         },
@@ -86,6 +88,12 @@ export async function POST(req: NextRequest) {
         {
           success: false,
           message: "Email not verified. Please verify your email address.",
+          errorCode: "EMAIL_NOT_VERIFIED",
+          isEmailVerified: false,
+          data: {
+            email: user.email,
+            isEmailVerified: false,
+          },
           errors: [{ field: "email", message: "Email not verified" }],
           status: httpStatus.FORBIDDEN,
         },
@@ -100,6 +108,7 @@ export async function POST(req: NextRequest) {
         {
           success: false,
           message: "Invalid email or password",
+          errorCode: "INVALID_CREDENTIALS",
           errors: [{ field: "password", message: "Invalid email or password" }],
           status: httpStatus.UNAUTHORIZED,
         },
