@@ -2,24 +2,25 @@
 
 import { Button } from "@/components/ui/button";
 import CommonFieldset from "@/components/ui/fieldset";
-import { LoginFormValues } from "@/types/auth/auth.types";
+
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import SocialAuthButtons from "@/components/shared/social-auth-buttons";
+import { LoginRequestPayload } from "@/types";
 
 const LoginForm = () => {
     const {
         control,
         handleSubmit,
         formState: { errors },
-    } = useForm<LoginFormValues>({
+    } = useForm<LoginRequestPayload>({
         defaultValues: {
             email: "",
             password: "",
         },
     });
 
-    const onSubmit = async (data: LoginFormValues) => {
+    const onSubmit = async (data: LoginRequestPayload) => {
         console.log(data);
     };
 
@@ -29,7 +30,7 @@ const LoginForm = () => {
             <SocialAuthButtons label="Or continue with email" role="candidate" />
             {/* Login Form */}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
-                <CommonFieldset<LoginFormValues>
+                <CommonFieldset<LoginRequestPayload>
                     control={control}
                     register_as="email"
                     label="Email Address"
@@ -45,7 +46,7 @@ const LoginForm = () => {
                         },
                     }}
                 />
-                <CommonFieldset<LoginFormValues>
+                <CommonFieldset<LoginRequestPayload>
                     control={control}
                     register_as="password"
                     label="Password"

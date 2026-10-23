@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import CommonFieldset from "@/components/ui/fieldset";
 import RoleSwitcher from "@/components/shared/role-switcher";
 import SocialAuthButtons from "@/components/shared/social-auth-buttons";
-import { CandidateRegisterFormValues } from "@/types/auth/auth.types";
+import { CandidateRegisterFormValues } from "@/types/auth/register.types";
 import toast from "react-hot-toast";
 
 const CandidateRegisterForm = () => {

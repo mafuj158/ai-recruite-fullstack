@@ -8,7 +8,7 @@ import { successResponse, errorResponse } from "@/lib/api-response";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, password, role, fullName, hrName, companyName } = body;
+    const { email, password, role, fullName, companyName } = body;
 
     // 1. Common input validation
     if (!email || !password || !role) {
@@ -23,13 +23,13 @@ export async function POST(req: NextRequest) {
       return errorResponse("Role must be either CANDIDATE or EMPLOYER.", 400);
     }
 
-    // 2. Role-specific validation
-    if (role === "EMPLOYER" && (!hrName?.trim() || !companyName?.trim())) {
-      return errorResponse("HR Name and Company Name are required for employers.", 400);
+    // 2. Name & Role-specific validation
+    if (!fullName?.trim()) {
+      return errorResponse("Full Name is required.", 400);
     }
 
-    if (role === "CANDIDATE" && !fullName?.trim()) {
-      return errorResponse("Full Name is required for candidates.", 400);
+    if (role === "EMPLOYER" && !companyName?.trim()) {
+      return errorResponse("Company Name is required for employers.", 400);
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -51,8 +51,7 @@ export async function POST(req: NextRequest) {
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    const displayName =
-      role === "EMPLOYER" ? hrName.trim() : fullName.trim();
+    const displayName = fullName.trim();
 
     // 6. Create User and Role-specific Profile in Neon PostgreSQL
     let user;
@@ -67,7 +66,7 @@ export async function POST(req: NextRequest) {
           emailVerifyExpires: verificationExpires,
           employerProfile: {
             create: {
-              hrName: hrName.trim(),
+              fullName: displayName,
               companyName: companyName.trim(),
             },
           },
@@ -82,7 +81,7 @@ export async function POST(req: NextRequest) {
           employerProfile: {
             select: {
               id: true,
-              hrName: true,
+              fullName: true,
               companyName: true,
             },
           },

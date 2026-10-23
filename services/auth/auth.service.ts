@@ -2,11 +2,11 @@ import api from "@/services/api";
 import type {
   CandidateRegisterFormValues,
   EmployerRegisterFormValues,
-  LoginFormValues,
-} from "@/types/auth/auth.types";
+} from "@/types/auth/register.types";
+import type { LoginRequestPayload } from "@/types/auth/login.types";
 
 export const authService = {
-  login: async (payload: LoginFormValues) => {
+  login: async (payload: LoginRequestPayload) => {
     return api.post("/api/auth/login", payload);
   },
 

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import CommonFieldset from "@/components/ui/fieldset";
 import RoleSwitcher from "@/components/shared/role-switcher";
 import SocialAuthButtons from "@/components/shared/social-auth-buttons";
-import { EmployerRegisterFormValues } from "@/types/auth/auth.types";
+import { EmployerRegisterFormValues } from "@/types/auth/register.types";
 import toast from "react-hot-toast";
 
 const EmployerRegisterForm = () => {
@@ -22,7 +22,7 @@ const EmployerRegisterForm = () => {
     formState: { errors },
   } = useForm<EmployerRegisterFormValues>({
     defaultValues: {
-      hrName: "",
+      fullName: "",
       companyName: "",
       email: "",
       password: "",
@@ -58,14 +58,14 @@ const EmployerRegisterForm = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-3.5">
         <CommonFieldset<EmployerRegisterFormValues>
           control={control}
-          register_as="hrName"
-          label="Full Name (HR / Recruiter)"
+          register_as="fullName"
+          label="Full Name"
           type="text"
           placeholder="Jane Doe"
           isRequired={true}
           errors={errors}
           validationRules={{
-            required: "HR / Recruiter name is required",
+            required: "Full name is required",
           }}
         />
 

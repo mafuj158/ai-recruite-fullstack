@@ -1,19 +1,47 @@
-export interface CandidateRegisterFormValues {
+export type {
+  CandidateRegisterFormValues,
+  EmployerRegisterFormValues,
+  RegisterRequestPayload,
+} from "./register.types";
+
+export type AuthRole = "CANDIDATE" | "EMPLOYER" | "ADMIN";
+
+export interface CandidateProfileData {
+  id: string;
+  userId: string;
   fullName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
+  avatarUrl: string | null;
+  phone: string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
-export interface EmployerRegisterFormValues {
-  hrName: string;
+export interface EmployerProfileData {
+  id: string;
+  userId: string;
+  fullName: string;
   companyName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
+  logoUrl: string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
-export interface LoginFormValues {
+export interface AuthUser {
+  id: string;
   email: string;
-  password: string;
+  role: AuthRole;
+  isEmailVerified: boolean;
+  isOnboarded: boolean;
+  candidateProfile: CandidateProfileData | null;
+  employerProfile: EmployerProfileData | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+// Alias for convenience
+export type SafeUser = AuthUser;
+
+export interface AuthTokens {
+  access_token: string;
+  refresh_token: string;
 }

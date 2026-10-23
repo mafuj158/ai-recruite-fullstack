@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     const displayName =
       user.role === "EMPLOYER"
-        ? user.employerProfile?.hrName || "Recruiter"
+        ? user.employerProfile?.fullName || "Recruiter"
         : user.candidateProfile?.fullName || "Candidate";
 
     await sendVerificationEmail({

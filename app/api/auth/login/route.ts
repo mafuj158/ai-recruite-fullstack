@@ -1,23 +1,67 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
-import { successResponse, errorResponse } from "@/lib/api-response";
+import httpStatus from "http-status";
+import { generateAccessToken, generateRefreshToken } from "@/lib/jwt";
+import {
+  AuthUser,
+  LoginRequestPayload,
+  LoginResponseData,
+  ValidationErrorItem,
+} from "@/types";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { email, password } = body;
-
-    // 1. Validation
-    if (!email || !password) {
-      return errorResponse("Email and password are required.", 400);
+    const body = (await req.json().catch(() => null)) as LoginRequestPayload | null;
+    if (!body || typeof body !== "object") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid request payload",
+          status: httpStatus.BAD_REQUEST,
+        },
+        { status: httpStatus.BAD_REQUEST }
+      );
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    const { email, password } = body;
 
-    // 2. Find user in Neon DB
+    // ১. সব ভ্যালিডেশন এরর Array হিসেবে কালেক্ট করা
+    const errors: ValidationErrorItem[] = [];
+
+    // Email Validation (Presence, Type & Format check)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (email === undefined || email === null || email === "") {
+      errors.push({ field: "email", message: "Email is required" });
+    } else if (typeof email !== "string") {
+      errors.push({ field: "email", message: "Email must be a string" });
+    } else if (!emailRegex.test(email.trim())) {
+      errors.push({ field: "email", message: "Please provide a valid email address" });
+    }
+
+    // Password Validation (Presence, Type & Length check)
+    if (password === undefined || password === null || password === "") {
+      errors.push({ field: "password", message: "Password is required" });
+    } else if (typeof password !== "string") {
+      errors.push({ field: "password", message: "Password must be a string" });
+    }
+
+    // ২. কোনো এরর থাকলে 400 রিটার্ন করা
+    if (errors.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Validation failed",
+          errors,
+          status: httpStatus.BAD_REQUEST,
+        },
+        { status: httpStatus.BAD_REQUEST }
+      );
+    }
+
+    // ৩. ডাটাবেসে ইউজার এবং সংশ্লিষ্ট প্রোফাইল আছে কি না যাচাই
     const user = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
+      where: { email },
       include: {
         candidateProfile: true,
         employerProfile: true,
@@ -25,43 +69,156 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user) {
-      return errorResponse("Invalid email or password.", 401);
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid email or password",
+          errors: [{ field: "email", message: "Invalid email or password" }],
+          status: httpStatus.UNAUTHORIZED,
+        },
+        { status: httpStatus.UNAUTHORIZED }
+      );
     }
 
-    // 3. Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isPasswordValid) {
-      return errorResponse("Invalid email or password.", 401);
-    }
-
-    // 4. Check email verification status
+    // ৪. ইমেল ভেরিফিকেশন হয়েছে কিনা চেক করা (অ্যাকাউন্ট অ্যাক্টিভ কিনা)
     if (!user.isEmailVerified) {
       return NextResponse.json(
         {
           success: false,
-          code: "EMAIL_NOT_VERIFIED",
-          message: "Please verify your email address before logging in.",
+          message: "Email not verified. Please verify your email address.",
+          errors: [{ field: "email", message: "Email not verified" }],
+          status: httpStatus.FORBIDDEN,
         },
-        { status: 403 }
+        { status: httpStatus.FORBIDDEN }
       );
     }
 
-    // 5. Successful login payload
-    const userData = {
+    // ৫. পাসওয়ার্ড সঠিক কিনা যাচাই করা (bcrypt.compare ব্যবহার করে)
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid email or password",
+          errors: [{ field: "password", message: "Invalid email or password" }],
+          status: httpStatus.UNAUTHORIZED,
+        },
+        { status: httpStatus.UNAUTHORIZED }
+      );
+    }
+
+    // ৬. রোল এবং অনবোর্ডিং স্ট্যাটাস অনুযায়ী রিডাইরেক্ট ইউআরএল নির্ধারণ
+    let redirectTo = "/";
+    if (!user.isOnboarded) {
+      if (user.role === "EMPLOYER") {
+        redirectTo = "/onboarding/employer";
+      } else if (user.role === "ADMIN") {
+        redirectTo = "/admin/dashboard";
+      } else {
+        redirectTo = "/onboarding/candidate";
+      }
+    } else {
+      if (user.role === "EMPLOYER") {
+        redirectTo = "/employer/dashboard";
+      } else if (user.role === "ADMIN") {
+        redirectTo = "/admin/dashboard";
+      } else {
+        redirectTo = "/candidate/dashboard";
+      }
+    }
+
+    // ৭. JWT Access Token এবং Refresh Token জেনারেট করা
+    const tokenPayload = {
+      user_id: user.id,
+      email: user.email,
+    };
+
+    const accessToken = generateAccessToken(tokenPayload);
+    const refreshToken = generateRefreshToken(tokenPayload);
+
+    // ৮. রেসপন্সের জন্য নিরাপদ ইউজার ডাটা প্রস্তুত করা (পাসওয়ার্ড ও ভেরিফিকেশন টোকেন বাদ দিয়ে)
+    const sanitizedUser: AuthUser = {
       id: user.id,
       email: user.email,
       role: user.role,
+      isEmailVerified: user.isEmailVerified,
       isOnboarded: user.isOnboarded,
-      name:
-        user.role === "EMPLOYER"
-          ? user.employerProfile?.hrName
-          : user.candidateProfile?.fullName,
-      companyName: user.employerProfile?.companyName,
+      candidateProfile: user.candidateProfile,
+      employerProfile: user.employerProfile,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
 
-    return successResponse(userData, "Logged in successfully!", 200);
+    const responseData: LoginResponseData = {
+      user: sanitizedUser,
+      redirectTo,
+      tokens: {
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      },
+    };
+
+    // ৯. সাকসেস রেসপন্স অবজেক্ট তৈরি করা
+    const response = NextResponse.json(
+      {
+        success: true,
+        message: "Login successful",
+        data: responseData,
+        status: httpStatus.OK,
+      },
+      { status: httpStatus.OK }
+    );
+
+    // ১০. সিকিউর HTTP-only কুকি সেট করা
+    const accessTokenCookieName =
+      process.env.NEXT_PUBLIC_ACCESS_TOKEN_NAME || "ai_recruite_access_token";
+    const refreshTokenCookieName =
+      process.env.NEXT_PUBLIC_REFRESH_TOKEN_NAME || "ai_recruite_refresh_token";
+
+    const isProduction = process.env.NODE_ENV === "production";
+
+    const accessTokenMaxAge = process.env.AI_RECRUITE_ACCESS_TOKEN_MAX_AGE
+      ? parseInt(process.env.AI_RECRUITE_ACCESS_TOKEN_MAX_AGE, 10)
+      : 15 * 60; // 15 মিনিট (ডিফল্ট)
+
+    const refreshTokenMaxAge = process.env.AI_RECRUITE_REFRESH_TOKEN_MAX_AGE
+      ? parseInt(process.env.AI_RECRUITE_REFRESH_TOKEN_MAX_AGE, 10)
+      : 7 * 24 * 60 * 60; // ৭ দিন (ডিফল্ট)
+
+    response.cookies.set({
+      name: accessTokenCookieName,
+      value: accessToken,
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/",
+      maxAge: accessTokenMaxAge,
+    });
+
+    response.cookies.set({
+      name: refreshTokenCookieName,
+      value: refreshToken,
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/",
+      maxAge: refreshTokenMaxAge,
+    });
+
+    return response;
   } catch (err: unknown) {
     console.error("[POST /api/auth/login] Error:", err);
-    return errorResponse("Internal server error. Please try again later.", 500);
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Internal server error. Please try again later.",
+        error:
+          process.env.NODE_ENV === "development" && err instanceof Error
+            ? err.message
+            : undefined,
+        status: httpStatus.INTERNAL_SERVER_ERROR,
+      },
+      { status: httpStatus.INTERNAL_SERVER_ERROR }
+    );
   }
 }
