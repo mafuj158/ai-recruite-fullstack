@@ -7,7 +7,6 @@ export interface CandidateRegisterFormValues {
 
 export interface EmployerRegisterFormValues {
   fullName: string;
-  companyName: string;
   email: string;
   password: string;
   confirmPassword: string;

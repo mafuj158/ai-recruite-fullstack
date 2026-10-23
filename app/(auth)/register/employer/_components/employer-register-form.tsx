@@ -23,7 +23,6 @@ const EmployerRegisterForm = () => {
   } = useForm<EmployerRegisterFormValues>({
     defaultValues: {
       fullName: "",
-      companyName: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -66,19 +65,6 @@ const EmployerRegisterForm = () => {
           errors={errors}
           validationRules={{
             required: "Full name is required",
-          }}
-        />
-
-        <CommonFieldset<EmployerRegisterFormValues>
-          control={control}
-          register_as="companyName"
-          label="Company Name"
-          type="text"
-          placeholder="TechCorp Global"
-          isRequired={true}
-          errors={errors}
-          validationRules={{
-            required: "Company name is required",
           }}
         />
 

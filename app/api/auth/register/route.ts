@@ -23,13 +23,9 @@ export async function POST(req: NextRequest) {
       return errorResponse("Role must be either CANDIDATE or EMPLOYER.", 400);
     }
 
-    // 2. Name & Role-specific validation
+    // 2. Name validation
     if (!fullName?.trim()) {
       return errorResponse("Full Name is required.", 400);
-    }
-
-    if (role === "EMPLOYER" && !companyName?.trim()) {
-      return errorResponse("Company Name is required for employers.", 400);
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -67,7 +63,7 @@ export async function POST(req: NextRequest) {
           employerProfile: {
             create: {
               fullName: displayName,
-              companyName: companyName.trim(),
+              companyName: companyName?.trim() || null,
             },
           },
         },

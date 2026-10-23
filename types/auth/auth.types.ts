@@ -20,7 +20,7 @@ export interface EmployerProfileData {
   id: string;
   userId: string;
   fullName: string;
-  companyName: string;
+  companyName: string | null;
   logoUrl: string | null;
   createdAt: Date | string;
   updatedAt: Date | string;
