@@ -7,21 +7,64 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import SocialAuthButtons from "@/components/shared/social-auth-buttons";
 import { LoginRequestPayload } from "@/types";
+import { useLogin } from "@/hooks/login.hook";
 
 const LoginForm = () => {
+
+
+    // hooks
     const {
         control,
         handleSubmit,
+        watch,
+        setError,
         formState: { errors },
     } = useForm<LoginRequestPayload>({
         defaultValues: {
             email: "",
             password: "",
         },
+        mode: "onBlur",
     });
+    const { login, loginAsync, isPending, data } = useLogin();
 
-    const onSubmit = async (data: LoginRequestPayload) => {
-        console.log(data);
+
+    // check user has touched the fields or not
+    const isLoginButtonDisabled = isPending || Object.keys(errors)?.length > 0 || !watch('email') || !watch('password');
+
+
+    // handle form submission
+    const onSubmit = (data: LoginRequestPayload) => {
+
+        loginAsync(data, {
+            onSuccess: (data) => {
+                console.log(data);
+
+            },
+            onError: (error) => {
+                const responseData = error.response?.data;
+                const errors = responseData?.errors;
+
+                if (!responseData?.isEmailVerified) {
+                    // show modal
+                    console.log(errors);
+                }
+
+                if (errors && errors.length > 0) {
+                    errors.forEach((err) => {
+                        setError(err.field as keyof LoginRequestPayload, {
+                            type: "server",
+                            message: err.message,
+                        });
+                    });
+                }
+
+            }
+        });
+
+
+
+
     };
 
     return (
@@ -71,7 +114,7 @@ const LoginForm = () => {
                     </Link>
                 </div>
 
-                <Button type="submit" variant="primary" className="w-full text-xs sm:text-sm py-3 sm:py-3.5 rounded" isLoading={false}>
+                <Button type="submit" variant="primary" disabled={isLoginButtonDisabled} className="w-full text-xs sm:text-sm py-3 sm:py-3.5 rounded" isLoading={isPending}>
                     Sign In
                 </Button>
             </form>

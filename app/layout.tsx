@@ -6,6 +6,7 @@ import { ModalProvider } from "@/components/modals/modal-provider";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { ConfigProvider } from "antd";
 import ScrollToTop from "@/components/ui/scroll-to-top";
+import QueryProvider from "@/providers/query-provider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -64,49 +65,51 @@ export default function RootLayout({
       className={`${inter.variable} ${ebGaramond.variable} antialiased`}
     >
       <body>
-        <AntdRegistry>
-          <ConfigProvider
-            theme={{
-              token: {
-                colorPrimary: "#244034",
-                colorPrimaryHover: "#1b3329",
-                colorPrimaryActive: "#14251e",
-                colorLink: "#244034",
-                borderRadius: 4,
-                borderRadiusLG: 4,
-                borderRadiusSM: 4,
-                borderRadiusXS: 2,
-                fontFamily: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
-              },
-              components: {
-                DatePicker: {
-                  colorPrimary: "#244034",
-                  activeBorderColor: "transparent",
-                  hoverBorderColor: "transparent",
-                  borderRadius: 4,
-                },
-                Select: {
+        <QueryProvider>
+          <AntdRegistry>
+            <ConfigProvider
+              theme={{
+                token: {
                   colorPrimary: "#244034",
                   colorPrimaryHover: "#1b3329",
-                  controlItemBgActive: "#EDF6F1",
-                  controlItemBgHover: "#F4F9F6",
-                  optionSelectedBg: "#EDF6F1",
-                  optionSelectedColor: "#244034",
-                  multipleItemBg: "#EDF6F1",
-                  multipleItemBorderColor: "#D5E6DC",
-                  colorTextPlaceholder: "#9CA3AF",
+                  colorPrimaryActive: "#14251e",
+                  colorLink: "#244034",
                   borderRadius: 4,
-                },
-                Modal: {
                   borderRadiusLG: 4,
                   borderRadiusSM: 4,
+                  borderRadiusXS: 2,
+                  fontFamily: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
                 },
-              },
-            }}
-          >
-            {children}
-          </ConfigProvider>
-        </AntdRegistry>
+                components: {
+                  DatePicker: {
+                    colorPrimary: "#244034",
+                    activeBorderColor: "transparent",
+                    hoverBorderColor: "transparent",
+                    borderRadius: 4,
+                  },
+                  Select: {
+                    colorPrimary: "#244034",
+                    colorPrimaryHover: "#1b3329",
+                    controlItemBgActive: "#EDF6F1",
+                    controlItemBgHover: "#F4F9F6",
+                    optionSelectedBg: "#EDF6F1",
+                    optionSelectedColor: "#244034",
+                    multipleItemBg: "#EDF6F1",
+                    multipleItemBorderColor: "#D5E6DC",
+                    colorTextPlaceholder: "#9CA3AF",
+                    borderRadius: 4,
+                  },
+                  Modal: {
+                    borderRadiusLG: 4,
+                    borderRadiusSM: 4,
+                  },
+                },
+              }}
+            >
+              {children}
+            </ConfigProvider>
+          </AntdRegistry>
+        </QueryProvider>
         <ToasterProvider />
         <ModalProvider />
         <ScrollToTop />
