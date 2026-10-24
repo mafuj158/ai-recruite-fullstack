@@ -110,9 +110,9 @@ export default function RootLayout({
               {children}
             </ConfigProvider>
           </AntdRegistry>
+          <ModalProvider />
         </QueryProvider>
         <ToasterProvider />
-        <ModalProvider />
         <ScrollToTop />
       </body>
     </html>

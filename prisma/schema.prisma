@@ -79,14 +79,28 @@ model CandidateProfile {
 }
 
 model EmployerProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fullName    String
-  companyName String?
-  logoUrl     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName           String
+  companyName        String?
+  logoUrl            String?
+  website            String?
+
+  // Relations & Core Onboarding Fields
+  industryId         String?
+  industry           Industry? @relation(fields: [industryId], references: [id], onDelete: SetNull)
+  rolesHiringFor     JobRole[]
+
+  companySize        String?
+  location           String?
+  aboutCompany       String?
+
+  preferredExpLevels String[]  @default([])
+  budgetRange        String?
+
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   @@map("employer_profiles")
 }
@@ -101,6 +115,7 @@ model JobRole {
   value      String             @unique
   isActive   Boolean            @default(true)
   candidates CandidateProfile[]
+  employers  EmployerProfile[]
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt
 
@@ -126,6 +141,7 @@ model Industry {
   value      String             @unique
   isActive   Boolean            @default(true)
   candidates CandidateProfile[]
+  employers  EmployerProfile[]
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt
 

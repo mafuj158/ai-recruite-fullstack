@@ -7,14 +7,19 @@ import toast from "react-hot-toast";
 import StepperIndicator from "@/app/(onboarding)/onboarding/_components/stepper-indicator";
 import StepCompanyInfo from "./step-company-info";
 import StepHiringPreferences from "./step-hiring-preferences";
-import type { EmployerOnboardingFormValues } from "@/types/employer/onboarding.types";
+import type {
+  EmployerOnboardingFormValues,
+  EmployerOnboardingRequestPayload,
+} from "@/types/employer/onboarding.types";
+import { useEmployerOnboarding } from "@/hooks/employer/use-employer-onboarding";
 
 export type { EmployerOnboardingFormValues };
 
 export default function EmployerOnboardingStepper() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
-  const [loading, setLoading] = useState(false);
+
+  const { completeOnboarding, isPending } = useEmployerOnboarding();
 
   const {
     control,
@@ -28,7 +33,7 @@ export default function EmployerOnboardingStepper() {
       companyName: "",
       companyLogo: "",
       website: "",
-      industry: "",
+      industryId: "",
       companySize: "",
       location: "",
       aboutCompany: "",
@@ -43,7 +48,7 @@ export default function EmployerOnboardingStepper() {
     const isValid = await trigger([
       "companyName",
       "website",
-      "industry",
+      "industryId",
       "companySize",
       "location",
       "aboutCompany",
@@ -54,18 +59,35 @@ export default function EmployerOnboardingStepper() {
     }
   };
 
-  const onSubmit = async (data: EmployerOnboardingFormValues) => {
-    setLoading(true);
+  const onSubmit = (data: EmployerOnboardingFormValues) => {
+    const payload: EmployerOnboardingRequestPayload = {
+      companyName: data.companyName,
+      companyLogo: data.companyLogo || null,
+      website: data.website,
+      industryId: data.industryId,
+      companySize: data.companySize,
+      location: data.location,
+      aboutCompany: data.aboutCompany,
+      rolesHiringFor: data.rolesHiringFor.map((r) => ({
+        id: r.id || undefined,
+        label: r.label,
+        value: r.value,
+      })),
+      preferredExpLevels: data.preferredExpLevels,
+      budgetRange: data.budgetRange,
+    };
 
-    try {
-      console.log("Employer Profile Setup Data:", data);
-      toast.success("Company profile setup completed successfully!");
-      router.push("/employer/dashboard");
-    } catch {
-      toast.error("Failed to complete company setup");
-    } finally {
-      setLoading(false);
-    }
+    completeOnboarding(payload, {
+      onSuccess: (res) => {
+        toast.success(res.message || "Company profile setup completed successfully!");
+        router.replace("/employer/dashboard");
+      },
+      onError: (err) => {
+        toast.error(
+          err.response?.data?.message || "Failed to complete company setup. Please try again."
+        );
+      },
+    });
   };
 
   return (
@@ -97,7 +119,7 @@ export default function EmployerOnboardingStepper() {
             <StepHiringPreferences
               control={control}
               onBack={() => setStep(1)}
-              loading={loading}
+              loading={isPending}
             />
           )}
         </form>

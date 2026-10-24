@@ -6,14 +6,13 @@ import StepHeader from "@/app/(onboarding)/onboarding/_components/step-header";
 import StepActions from "@/app/(onboarding)/onboarding/_components/step-actions";
 import CustomTagSelect from "@/app/(onboarding)/onboarding/_components/custom-tag-select";
 import type { EmployerOnboardingFormValues } from "@/types/employer/onboarding.types";
-
 import {
-  JOB_ROLE_OPTIONS as ROLE_OPTIONS,
   EXPERIENCE_LEVEL_OPTIONS as EXP_LEVEL_OPTIONS,
   BUDGET_OPTIONS,
 } from "@/lib/constants";
+import { useLookupOptions } from "@/hooks/lookup/use-lookup-options";
 
-export { ROLE_OPTIONS, EXP_LEVEL_OPTIONS, BUDGET_OPTIONS };
+export { EXP_LEVEL_OPTIONS, BUDGET_OPTIONS };
 
 interface StepHiringPreferencesProps {
   control: Control<EmployerOnboardingFormValues>;
@@ -26,6 +25,13 @@ export default function StepHiringPreferences({
   onBack,
   loading = false,
 }: StepHiringPreferencesProps) {
+  const { jobRoles, isLoading: isLookupLoading } = useLookupOptions();
+
+  const roleOptions = jobRoles.map((r) => ({
+    label: r.label,
+    value: r.label,
+  }));
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -46,10 +52,29 @@ export default function StepHiringPreferences({
         render={({ field, fieldState: { error } }) => (
           <CustomTagSelect
             label="Roles Hiring For"
-            placeholder="Type or select roles (e.g. Frontend Developer)..."
-            options={ROLE_OPTIONS}
-            selectedValues={field.value || []}
-            onChange={(newRoles) => field.onChange(newRoles)}
+            placeholder={
+              isLookupLoading
+                ? "Loading roles..."
+                : "Type or select roles (e.g. Frontend Developer)..."
+            }
+            options={roleOptions}
+            selectedValues={(field.value || []).map((v) =>
+              typeof v === "string" ? v : v.label
+            )}
+            onChange={(newRoles) => {
+              // Convert strings to { label, value } objects
+              const objects = newRoles.map((r) => {
+                const matched = jobRoles.find(
+                  (jr) => jr.label.toLowerCase() === r.toLowerCase()
+                );
+                return {
+                  id: matched?.id,
+                  label: r,
+                  value: r.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+                };
+              });
+              field.onChange(objects);
+            }}
             error={error?.message}
             isRequired={true}
             suggestedLabel="Suggested Roles:"

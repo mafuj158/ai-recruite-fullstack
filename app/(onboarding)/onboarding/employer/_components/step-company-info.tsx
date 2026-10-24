@@ -8,13 +8,8 @@ import StepActions from "@/app/(onboarding)/onboarding/_components/step-actions"
 import { LuCamera, LuTrash2 } from "react-icons/lu";
 import toast from "react-hot-toast";
 import type { EmployerOnboardingFormValues } from "@/types/employer/onboarding.types";
-
-import {
-  INDUSTRY_OPTIONS,
-  COMPANY_SIZE_OPTIONS,
-} from "@/lib/constants";
-
-export { INDUSTRY_OPTIONS, COMPANY_SIZE_OPTIONS };
+import { COMPANY_SIZE_OPTIONS } from "@/lib/constants";
+import { useLookupOptions } from "@/hooks/lookup/use-lookup-options";
 
 interface StepCompanyInfoProps {
   control: Control<EmployerOnboardingFormValues>;
@@ -34,6 +29,13 @@ export default function StepCompanyInfo({
   const logoInputRef = useRef<HTMLInputElement>(null);
   const companyLogo = watch("companyLogo");
   const [logoPreview, setLogoPreview] = useState<string | null>(companyLogo || null);
+
+  const { industries, isLoading: isLookupLoading } = useLookupOptions();
+
+  const industryOptions = industries.map((i) => ({
+    label: i.label,
+    value: i.id,
+  }));
 
   const handleLogoUpload = (file: File | null) => {
     if (!file) return;
@@ -70,7 +72,7 @@ export default function StepCompanyInfo({
         description="Help candidates learn about your brand, mission, and culture"
       />
 
-      {/* Company Name (Client Required) */}
+      {/* Company Name */}
       <CommonFieldset<EmployerOnboardingFormValues>
         control={control}
         register_as="companyName"
@@ -174,11 +176,11 @@ export default function StepCompanyInfo({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <CommonFieldset<EmployerOnboardingFormValues>
           control={control}
-          register_as="industry"
+          register_as="industryId"
           label="Industry"
           type="select"
-          placeholder="Select industry"
-          options={INDUSTRY_OPTIONS}
+          placeholder={isLookupLoading ? "Loading industries..." : "Select industry"}
+          options={industryOptions}
           isRequired={true}
           errors={errors}
           validationRules={{

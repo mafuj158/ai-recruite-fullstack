@@ -1,37 +1,35 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Modal } from "antd";
 import { useAppStore } from "@/store";
 import { LuLogOut, LuX } from "react-icons/lu";
 import toast from "react-hot-toast";
 import { Button } from "../ui/button";
+import { useLogout } from "@/hooks/auth/use-logout";
 
 export default function LogoutModal() {
   const router = useRouter();
   const pathname = usePathname();
   const isLogoutModalOpen = useAppStore((state) => state.isLogoutModalOpen);
   const toggleLogoutModal = useAppStore((state) => state.toggleLogoutModal);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const { logoutAsync, isPending } = useLogout();
 
   const isEmployer = pathname.includes("/employer");
   const closeModal = () => toggleLogoutModal(false);
 
-  const handleLogout = async () => {
-    if (isLoggingOut) return;
-
-    setIsLoggingOut(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 400));
-      toast.success("Successfully logged out.");
-      closeModal();
-      router.push("/login");
-    } catch {
-      toast.error("Failed to sign out. Please try again.");
-    } finally {
-      setIsLoggingOut(false);
-    }
+  const handleLogout = () => {
+    logoutAsync(undefined, {
+      onSuccess: (res) => {
+        toast.success(res?.message || "Successfully logged out.");
+        closeModal();
+        router.replace("/login");
+      },
+      onError: (err) => {
+        toast.error(err?.response?.data?.message || "Failed to sign out. Please try again.");
+      },
+    });
   };
 
   return (
@@ -83,9 +81,9 @@ export default function LogoutModal() {
             variant="danger"
             size="md"
             onClick={handleLogout}
-            isLoading={isLoggingOut}
+            isLoading={isPending}
           >
-            {isLoggingOut ? "Signing Out..." : "Sign Out"}
+            {isPending ? "Signing Out..." : "Sign Out"}
           </Button>
         </div>
       </div>
