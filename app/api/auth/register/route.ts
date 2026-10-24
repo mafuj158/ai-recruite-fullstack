@@ -1,135 +1,33 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
+import httpStatus from "http-status";
 import { sendVerificationEmail } from "@/lib/mail";
-import { successResponse, errorResponse } from "@/lib/api-response";
 import { USER_ROLES } from "@/constants";
+import { ValidationErrorItem, RegisterRequestPayload } from "@/types";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { email, password, role, fullName, companyName } = body;
-
-    // 1. Common input validation
-    if (!email || !password || !role) {
-      return errorResponse("Email, password, and role are required.", 400);
-    }
-
-    if (password.length < 6) {
-      return errorResponse("Password must be at least 6 characters long.", 400);
-    }
-
-    if (role !== USER_ROLES.CANDIDATE && role !== USER_ROLES.EMPLOYER) {
-      return errorResponse("Role must be either CANDIDATE or EMPLOYER.", 400);
-    }
-
-    // 2. Name validation
-    if (!fullName?.trim()) {
-      return errorResponse("Full Name is required.", 400);
-    }
-
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // 3. Check for existing user
-    const existingUser = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
-    });
-
-    if (existingUser) {
-      return errorResponse("An account with this email already exists.", 409);
-    }
-
-    // 4. Hash password with bcrypt
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
-
-    // 5. Generate secure email verification token (valid for 24 hours)
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-    const displayName = fullName.trim();
-
-    // 6. Create User and Role-specific Profile in Neon PostgreSQL
-    let user;
-    if (role === USER_ROLES.EMPLOYER) {
-      user = await prisma.user.create({
-        data: {
-          email: normalizedEmail,
-          passwordHash,
-          role: USER_ROLES.EMPLOYER,
-          isEmailVerified: false,
-          emailVerifyToken: verificationToken,
-          emailVerifyExpires: verificationExpires,
-          employerProfile: {
-            create: {
-              fullName: displayName,
-              companyName: companyName?.trim() || null,
-            },
-          },
+    const body = (await req.json().catch(() => null)) as RegisterRequestPayload | null;
+    if (!body || typeof body !== "object") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid request payload",
+          status: httpStatus.BAD_REQUEST,
         },
-        select: {
-          id: true,
-          email: true,
-          role: true,
-          isEmailVerified: true,
-          isOnboarded: true,
-          createdAt: true,
-          employerProfile: {
-            select: {
-              id: true,
-              fullName: true,
-              companyName: true,
-            },
-          },
-        },
-      });
-    } else {
-      user = await prisma.user.create({
-        data: {
-          email: normalizedEmail,
-          passwordHash,
-          role: USER_ROLES.CANDIDATE,
-          isEmailVerified: false,
-          emailVerifyToken: verificationToken,
-          emailVerifyExpires: verificationExpires,
-          candidateProfile: {
-            create: {
-              fullName: fullName.trim(),
-            },
-          },
-        },
-        select: {
-          id: true,
-          email: true,
-          role: true,
-          isEmailVerified: true,
-          isOnboarded: true,
-          createdAt: true,
-          candidateProfile: {
-            select: {
-              id: true,
-              fullName: true,
-            },
-          },
-        },
-      });
+        { status: httpStatus.BAD_REQUEST }
+      );
     }
 
-    // 7. Dispatch verification email
-    await sendVerificationEmail({
-      to: normalizedEmail,
-      name: displayName,
-      token: verificationToken,
-    });
+    const { email, password } = body;
 
-    return successResponse(
-      user,
-      "Account created successfully! Please check your email to verify your account.",
-      201
-    );
+    // ১. সব ভ্যালিডেশন এরর Array হিসেবে কালেক্ট করা
+    const errors: ValidationErrorItem[] = [];
+
   } catch (err: unknown) {
     console.error("[POST /api/auth/register] Error:", err);
-    return errorResponse("Internal server error. Please try again later.", 500);
+
   }
 }

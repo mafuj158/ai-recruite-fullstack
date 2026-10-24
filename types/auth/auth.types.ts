@@ -1,9 +1,3 @@
-export type {
-  CandidateRegisterFormValues,
-  EmployerRegisterFormValues,
-  RegisterRequestPayload,
-} from "./register.types";
-
 import type { UserRoleType } from "@/constants/roles";
 
 export type AuthRole = UserRoleType;
