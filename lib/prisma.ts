@@ -11,14 +11,16 @@ const adapter = new PrismaNeon({
 })
 
 export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    adapter,
-    log:
-      process.env.NODE_ENV === 'development'
-        ? ['query', 'error', 'warn']
-        : ['error'],
-  })
+  (globalForPrisma.prisma && "jobRole" in globalForPrisma.prisma)
+    ? globalForPrisma.prisma
+    : new PrismaClient({
+        adapter,
+        log:
+          process.env.NODE_ENV === "development"
+            ? ["query", "error", "warn"]
+            : ["error"],
+      });
+
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 

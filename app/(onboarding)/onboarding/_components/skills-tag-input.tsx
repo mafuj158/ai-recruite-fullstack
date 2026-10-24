@@ -3,25 +3,12 @@
 import { useState } from "react";
 import { LuX, LuPlus } from "react-icons/lu";
 import { cn } from "@/lib/utils";
-
-export const SUGGESTED_SKILLS = [
-  "React",
-  "TypeScript",
-  "JavaScript",
-  "Node.js",
-  "Python",
-  "Next.js",
-  "Tailwind CSS",
-  "PostgreSQL",
-  "Docker",
-  "AWS",
-  "Git",
-  "GraphQL",
-];
+import { LookupOption } from "@/types/candidate/onboarding.types";
 
 interface SkillsTagInputProps {
-  skills: string[];
-  onChange: (skills: string[]) => void;
+  skills: LookupOption[];
+  onChange: (skills: LookupOption[]) => void;
+  suggestedSkills?: LookupOption[];
   error?: string;
   label?: string;
   isRequired?: boolean;
@@ -30,13 +17,32 @@ interface SkillsTagInputProps {
 export default function SkillsTagInput({
   skills = [],
   onChange,
+  suggestedSkills = [],
   error,
   label = "Skills & Expertise",
   isRequired = true,
 }: SkillsTagInputProps) {
   const [skillInput, setSkillInput] = useState("");
 
-  const handleAddSkills = (rawInput?: string) => {
+  const handleAddSkillItem = (item: { id?: string; label: string; value?: string }) => {
+    const trimmedLabel = item.label.trim();
+    if (!trimmedLabel) return;
+
+    if (skills.some((s) => s.label.toLowerCase() === trimmedLabel.toLowerCase())) {
+      return;
+    }
+
+    const value = item.value || trimmedLabel.toLowerCase().replace(/\s+/g, "-");
+    const newSkill: LookupOption = {
+      id: item.id || "",
+      label: trimmedLabel,
+      value,
+    };
+
+    onChange([...skills, newSkill]);
+  };
+
+  const handleAddSkillsFromInput = (rawInput?: string) => {
     const text = (rawInput !== undefined ? rawInput : skillInput).trim();
     if (!text) return;
 
@@ -46,9 +52,22 @@ export default function SkillsTagInput({
       .filter((s) => s.length > 0);
 
     const updated = [...skills];
-    for (const item of newItems) {
-      if (!updated.some((s) => s.toLowerCase() === item.toLowerCase())) {
-        updated.push(item);
+    for (const itemText of newItems) {
+      if (!updated.some((s) => s.label.toLowerCase() === itemText.toLowerCase())) {
+        // Check if itemText exists in suggestedSkills
+        const matched = suggestedSkills.find(
+          (s) => s.label.toLowerCase() === itemText.toLowerCase()
+        );
+
+        if (matched) {
+          updated.push(matched);
+        } else {
+          updated.push({
+            id: "",
+            label: itemText,
+            value: itemText.toLowerCase().replace(/\s+/g, "-"),
+          });
+        }
       }
     }
 
@@ -61,9 +80,9 @@ export default function SkillsTagInput({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
-      handleAddSkills();
+      handleAddSkillsFromInput();
     } else if (e.key === "Backspace" && !skillInput && skills.length > 0) {
-      handleRemoveSkill(skills[skills.length - 1]);
+      handleRemoveSkill(skills[skills.length - 1].label);
     }
   };
 
@@ -71,25 +90,25 @@ export default function SkillsTagInput({
     const pastedData = e.clipboardData.getData("text");
     if (pastedData.includes(",") || pastedData.includes(";")) {
       e.preventDefault();
-      handleAddSkills(pastedData);
+      handleAddSkillsFromInput(pastedData);
     }
   };
 
-  const handleRemoveSkill = (skillToRemove: string) => {
-    const updated = skills.filter((s) => s !== skillToRemove);
+  const handleRemoveSkill = (labelToRemove: string) => {
+    const updated = skills.filter((s) => s.label !== labelToRemove);
     onChange(updated);
   };
 
   return (
     <div className="w-full min-w-0 max-w-full flex flex-col gap-1 justify-start text-base text-black border-none">
-      {/* Label matching CommonFieldset */}
+      {/* Label */}
       {label && (
         <label className="capitalize font-medium text-xs sm:text-sm text-zinc-900">
           {label} {isRequired && <span className="text-red-500 ml-0.5">*</span>}
         </label>
       )}
 
-      {/* Input box matching CommonFieldset innerWrapper */}
+      {/* Input box */}
       <div
         className={cn(
           "w-full min-w-0 max-w-full flex flex-wrap items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded bg-white border border-[#DFE1E7] focus-within:border-lime focus-within:ring-1 focus-within:ring-lime transition-all duration-200",
@@ -99,15 +118,15 @@ export default function SkillsTagInput({
         {/* Selected Skills Chips */}
         {skills.map((skill) => (
           <span
-            key={skill}
+            key={skill.id || skill.label}
             className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#EDF6F1] border border-[#D5E6DC] text-forest rounded text-xs font-medium transition-all"
           >
-            {skill}
+            {skill.label}
             <button
               type="button"
-              onClick={() => handleRemoveSkill(skill)}
+              onClick={() => handleRemoveSkill(skill.label)}
               className="text-forest/70 hover:text-red-500 transition-colors cursor-pointer"
-              title={`Remove ${skill}`}
+              title={`Remove ${skill.label}`}
             >
               <LuX className="size-3" />
             </button>
@@ -132,7 +151,7 @@ export default function SkillsTagInput({
           {skillInput.trim() && (
             <button
               type="button"
-              onClick={() => handleAddSkills()}
+              onClick={() => handleAddSkillsFromInput()}
               className="shrink-0 text-xs font-medium text-forest hover:underline flex items-center gap-0.5 px-1.5 py-0.5 cursor-pointer"
             >
               <LuPlus className="size-3" />
@@ -142,27 +161,30 @@ export default function SkillsTagInput({
         </div>
       </div>
 
-      {/* Validation error matching CommonFieldset */}
+      {/* Validation error */}
       {error && skills.length === 0 && (
         <p className="text-sm font-semibold text-red-600">{error}</p>
       )}
 
       {/* Suggested Skills to click & add */}
-      <div className="flex flex-wrap items-center gap-1.5 pt-1">
-        <span className="text-xs text-zinc-500 font-medium">Suggested:</span>
-        {SUGGESTED_SKILLS.filter((s) => !skills.includes(s))
-          .slice(0, 8)
-          .map((suggestion) => (
-            <button
-              key={suggestion}
-              type="button"
-              onClick={() => handleAddSkills(suggestion)}
-              className="text-xs px-2.5 py-0.5 rounded bg-zinc-100 hover:bg-[#EDF6F1] hover:text-forest hover:border-[#D5E6DC] border border-transparent text-zinc-600 transition-colors cursor-pointer"
-            >
-              + {suggestion}
-            </button>
-          ))}
-      </div>
+      {suggestedSkills.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+          <span className="text-xs text-zinc-500 font-medium">Suggested:</span>
+          {suggestedSkills
+            .filter((s) => !skills.some((selected) => selected.label.toLowerCase() === s.label.toLowerCase()))
+            .slice(0, 8)
+            .map((suggestion) => (
+              <button
+                key={suggestion.id || suggestion.value}
+                type="button"
+                onClick={() => handleAddSkillItem(suggestion)}
+                className="text-xs px-2.5 py-0.5 rounded bg-zinc-100 hover:bg-[#EDF6F1] hover:text-forest hover:border-[#D5E6DC] border border-transparent text-zinc-600 transition-colors cursor-pointer"
+              >
+                + {suggestion.label}
+              </button>
+            ))}
+        </div>
+      )}
     </div>
   );
 }

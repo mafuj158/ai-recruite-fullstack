@@ -7,14 +7,19 @@ import toast from "react-hot-toast";
 import StepperIndicator from "@/app/(onboarding)/onboarding/_components/stepper-indicator";
 import StepPersonalInfo from "./step-personal-info";
 import StepCvSelection from "./step-cv-selection";
-import type { CandidateOnboardingFormValues } from "@/types/candidate/onboarding.types";
+import type {
+  CandidateOnboardingFormValues,
+  CandidateOnboardingRequestPayload,
+} from "@/types/candidate/onboarding.types";
+import { useCandidateOnboarding } from "@/hooks/candidate/use-candidate-onboarding";
 
 export type { CandidateOnboardingFormValues };
 
 export default function CandidateOnboardingStepper() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
-  const [loading, setLoading] = useState(false);
+
+  const { completeOnboarding, isPending } = useCandidateOnboarding();
 
   const {
     control,
@@ -22,16 +27,15 @@ export default function CandidateOnboardingStepper() {
     setValue,
     watch,
     trigger,
-    formState: { errors },
   } = useForm<CandidateOnboardingFormValues>({
     defaultValues: {
-      jobTitle: "",
+      jobRoleId: "",
       skills: [],
       experienceLevel: "",
       preferredLocation: "",
       workType: "Remote",
       salaryExpectation: "",
-      industry: "",
+      industryId: "",
       bio: "",
       cvOption: "upload",
       cvFileName: "",
@@ -42,7 +46,7 @@ export default function CandidateOnboardingStepper() {
 
   const handleStep1Next = async () => {
     const isValid = await trigger([
-      "jobTitle",
+      "jobRoleId",
       "skills",
       "experienceLevel",
       "workType",
@@ -55,23 +59,41 @@ export default function CandidateOnboardingStepper() {
     }
   };
 
-  const onSubmit = async (data: CandidateOnboardingFormValues) => {
+  const onSubmit = (data: CandidateOnboardingFormValues) => {
     if (data.cvOption === "upload" && !data.cvFileName) {
       toast.error("Please upload your CV or choose to generate one with AI.");
       return;
     }
 
-    setLoading(true);
+    const payload: CandidateOnboardingRequestPayload = {
+      jobRoleId: data.jobRoleId,
+      skills: data.skills.map((s) => ({
+        id: s.id || undefined,
+        label: s.label,
+        value: s.value,
+      })),
+      experienceLevel: data.experienceLevel,
+      preferredLocation: data.preferredLocation,
+      workType: data.workType,
+      salaryExpectation: data.salaryExpectation,
+      industryId: data.industryId || null,
+      bio: data.bio || null,
+      cvOption: data.cvOption,
+      cvFileName: data.cvFileName || null,
+      cvFileSize: data.cvFileSize || null,
+    };
 
-    try {
-      console.log("Candidate Profile Setup Data:", data);
-      toast.success("Profile setup completed successfully!");
-      router.push("/candidate/dashboard");
-    } catch {
-      toast.error("Failed to complete profile setup");
-    } finally {
-      setLoading(false);
-    }
+    completeOnboarding(payload, {
+      onSuccess: (res) => {
+        toast.success(res.message || "Profile setup completed successfully!");
+        router.replace("/candidate/dashboard");
+      },
+      onError: (err) => {
+        toast.error(
+          err.response?.data?.message || "Failed to complete profile setup. Please try again."
+        );
+      },
+    });
   };
 
   return (
@@ -101,7 +123,7 @@ export default function CandidateOnboardingStepper() {
               setValue={setValue}
               watch={watch}
               onBack={() => setStep(1)}
-              loading={loading}
+              loading={isPending}
             />
           )}
         </form>

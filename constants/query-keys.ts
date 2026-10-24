@@ -64,4 +64,8 @@ export const QUERY_KEYS = {
       ["jobs", "list", filters] as const,
     DETAILS: (slug: string) => ["jobs", "details", slug] as const,
   },
+  LOOKUP: {
+    OPTIONS: ["lookup", "options"] as const,
+  },
 } as const;
+

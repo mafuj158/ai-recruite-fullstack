@@ -7,11 +7,8 @@ import StepActions from "@/app/(onboarding)/onboarding/_components/step-actions"
 import WorkTypeSelector from "@/app/(onboarding)/onboarding/_components/work-type-selector";
 import SkillsTagInput from "@/app/(onboarding)/onboarding/_components/skills-tag-input";
 import type { CandidateOnboardingFormValues } from "@/types/candidate/onboarding.types";
-import {
-  JOB_ROLE_OPTIONS,
-  EXPERIENCE_LEVEL_OPTIONS,
-  INDUSTRY_OPTIONS,
-} from "@/lib/constants";
+import { EXPERIENCE_LEVEL_OPTIONS } from "@/lib/constants";
+import { useLookupOptions } from "@/hooks/lookup/use-lookup-options";
 
 interface StepPersonalInfoProps {
   control: Control<CandidateOnboardingFormValues>;
@@ -22,6 +19,18 @@ export default function StepPersonalInfo({
   control,
   onNext,
 }: StepPersonalInfoProps) {
+  const { jobRoles, industries, skills: lookupSkills, isLoading } = useLookupOptions();
+
+  const jobRoleOptions = jobRoles.map((r) => ({
+    label: r.label,
+    value: r.id,
+  }));
+
+  const industryOptions = industries.map((i) => ({
+    label: i.label,
+    value: i.id,
+  }));
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -33,11 +42,11 @@ export default function StepPersonalInfo({
       {/* Job Title / Primary Role */}
       <CommonFieldset<CandidateOnboardingFormValues>
         control={control}
-        register_as="jobTitle"
+        register_as="jobRoleId"
         label="Job Title"
         type="select"
-        placeholder="Select your primary job title / role"
-        options={JOB_ROLE_OPTIONS}
+        placeholder={isLoading ? "Loading roles..." : "Select your primary job title / role"}
+        options={jobRoleOptions}
         isRequired={true}
         validationRules={{
           required: "Please select your job title",
@@ -56,6 +65,7 @@ export default function StepPersonalInfo({
           <SkillsTagInput
             skills={field.value || []}
             onChange={(newSkills) => field.onChange(newSkills)}
+            suggestedSkills={lookupSkills}
             error={error?.message}
           />
         )}
@@ -78,11 +88,11 @@ export default function StepPersonalInfo({
 
         <CommonFieldset<CandidateOnboardingFormValues>
           control={control}
-          register_as="industry"
+          register_as="industryId"
           label="Industry"
           type="select"
-          placeholder="Select industry"
-          options={INDUSTRY_OPTIONS}
+          placeholder={isLoading ? "Loading industries..." : "Select industry"}
+          options={industryOptions}
           isRequired={false}
         />
       </div>
