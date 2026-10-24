@@ -8,11 +8,7 @@ export const metadata: Metadata = {
     "Create an employer account on AI-Recruite to post jobs, automatically rank candidates, and conduct AI video interviews.",
 };
 
-export default async function EmployerRegisterPage() {
-
-  // for delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
+export default function EmployerRegisterPage() {
   return (
     <>
       {/* Icon Badge */}

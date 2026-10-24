@@ -9,28 +9,78 @@ import CommonFieldset from "@/components/ui/fieldset";
 import RoleSwitcher from "@/components/shared/role-switcher";
 import SocialAuthButtons from "@/components/shared/social-auth-buttons";
 import toast from "react-hot-toast";
-import { RegisterRequestPayload } from "@/types";
+import { RegisterFormValues, RegisterRequestPayload } from "@/types";
+import { useRegister } from "@/hooks/register.hook";
+import { USER_ROLES } from "@/constants";
 
 const EmployerRegisterForm = () => {
   const router = useRouter();
+  const [isRedirecting, setIsRedirecting] = useState(false);
   
   const {
     control,
     handleSubmit,
     watch,
+    setError,
     formState: { errors },
-  } = useForm<RegisterRequestPayload>({
+  } = useForm<RegisterFormValues>({
     defaultValues: {
       fullName: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
+    mode: "onBlur",
   });
 
+  const { registerAsync, isPending } = useRegister(USER_ROLES.EMPLOYER);
   const passwordValue = watch("password");
 
-  const onSubmit = async (data: RegisterRequestPayload) => {
-   
+  const isButtonDisabled =
+    isPending ||
+    isRedirecting ||
+    Object.keys(errors)?.length > 0 ||
+    !watch("fullName") ||
+    !watch("email") ||
+    !watch("password") ||
+    !watch("confirmPassword");
+
+  const onSubmit = (formData: RegisterFormValues) => {
+    const payload: RegisterRequestPayload = {
+      fullName: formData.fullName.trim(),
+      email: formData.email.trim().toLowerCase(),
+      password: formData.password,
+      role: USER_ROLES.EMPLOYER,
+    };
+
+    registerAsync(payload, {
+      onSuccess: (res) => {
+        setIsRedirecting(true);
+        toast.success(
+          res?.message ||
+            "Account created successfully! Please check your email to verify."
+        );
+        router.replace("/login");
+      },
+      onError: (error) => {
+        const responseData = error.response?.data;
+        const serverErrors = responseData?.errors;
+
+        if (serverErrors && serverErrors.length > 0) {
+          serverErrors.forEach((err) => {
+            setError(err.field as keyof RegisterFormValues, {
+              type: "server",
+              message: err.message,
+            });
+          });
+          return;
+        }
+
+        toast.error(
+          responseData?.message || "Registration failed. Please try again."
+        );
+      },
+    });
   };
 
   return (
@@ -42,7 +92,7 @@ const EmployerRegisterForm = () => {
       <SocialAuthButtons label="Or continue with work email" role="employer" />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-3.5">
-        <CommonFieldset<RegisterRequestPayload>
+        <CommonFieldset<RegisterFormValues>
           control={control}
           register_as="fullName"
           label="Full Name"
@@ -55,7 +105,7 @@ const EmployerRegisterForm = () => {
           }}
         />
 
-        <CommonFieldset<RegisterRequestPayload>
+        <CommonFieldset<RegisterFormValues>
           control={control}
           register_as="email"
           label="Work Email Address"
@@ -72,7 +122,7 @@ const EmployerRegisterForm = () => {
           }}
         />
 
-        <CommonFieldset<RegisterRequestPayload>
+        <CommonFieldset<RegisterFormValues>
           control={control}
           register_as="password"
           label="Password"
@@ -89,7 +139,7 @@ const EmployerRegisterForm = () => {
           }}
         />
 
-        <CommonFieldset<RegisterRequestPayload>
+        <CommonFieldset<RegisterFormValues>
           control={control}
           register_as="confirmPassword"
           label="Confirm Password"
@@ -107,10 +157,11 @@ const EmployerRegisterForm = () => {
         <Button
           type="submit"
           variant="primary"
+          disabled={isButtonDisabled}
+          isLoading={isPending || isRedirecting}
           className="w-full text-xs sm:text-sm py-3 sm:py-3.5 rounded mt-2"
-         
         >
-          Create Employer Account
+          {isRedirecting ? "Creating Account..." : "Create Employer Account"}
         </Button>
       </form>
 
