@@ -10,13 +10,13 @@ import RoleSwitcher from "@/components/shared/role-switcher";
 import SocialAuthButtons from "@/components/shared/social-auth-buttons";
 import toast from "react-hot-toast";
 import { RegisterFormValues, RegisterRequestPayload } from "@/types";
-import { useRegister } from "@/hooks/register.hook";
+import { useRegister } from "@/hooks";
 import { USER_ROLES } from "@/constants";
 
 const EmployerRegisterForm = () => {
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
-  
+
   const {
     control,
     handleSubmit,
@@ -58,7 +58,7 @@ const EmployerRegisterForm = () => {
         setIsRedirecting(true);
         toast.success(
           res?.message ||
-            "Account created successfully! Please check your email to verify."
+          "Account created successfully! Please check your email to verify."
         );
         router.replace("/login");
       },

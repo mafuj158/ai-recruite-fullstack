@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import SocialAuthButtons from "@/components/shared/social-auth-buttons";
 import { LoginRequestPayload } from "@/types";
-import { useLogin } from "@/hooks/login.hook";
+import { useLogin } from "@/hooks";
 import { USER_ROLES } from "@/constants";
 import ResendEmailModal from "./resend-email-modal";
 import toast from "react-hot-toast";
@@ -77,7 +77,11 @@ const LoginForm = () => {
                 const responseData = error.response?.data;
                 const errors = responseData?.errors;
 
-                if (!responseData?.isEmailVerified) {
+                // শুধুমাত্র ইমেল ভেরিফাইড না থাকলে এই মোডাল ওপেন হবে
+                if (
+                    responseData?.errorCode === "EMAIL_NOT_VERIFIED" ||
+                    responseData?.isEmailVerified === false
+                ) {
                     setUnverifiedEmail(responseData?.data?.email || data.email);
                     setIsResendModalOpen(true);
                     return;
@@ -90,11 +94,10 @@ const LoginForm = () => {
                             message: err.message,
                         });
                     });
-                    return
+                    return;
                 }
 
-                toast.error("Something went wrong. Please try again later.");
-
+                toast.error(responseData?.message || "Something went wrong. Please try again later.");
             }
         });
     };
