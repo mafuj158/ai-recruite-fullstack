@@ -1,0 +1,369 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "ai-recruite-api",
+		"description": "Postman Collection for AI-Recruite Application Backend APIs.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "authentication",
+			"item": [
+				{
+					"name": "register (Candidate / Employer)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"John Doe\",\n  \"email\": \"candidate@example.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"CANDIDATE\",\n  \"companyName\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Registers a new Candidate or Employer. If role is EMPLOYER, companyName is optional."
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.tokens) {",
+									"        if (jsonData.data.tokens.access_token) {",
+									"            pm.collectionVariables.set(\"token\", jsonData.data.tokens.access_token);",
+									"        }",
+									"        if (jsonData.data.tokens.refresh_token) {",
+									"            pm.collectionVariables.set(\"refreshToken\", jsonData.data.tokens.refresh_token);",
+									"        }",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"candidate@example.com\",\n  \"password\": \"Password123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Logs in user, returns access_token & refresh_token, and sets HTTP-only cookies. Auto-saves 'token' and 'refreshToken' variables on success."
+					},
+					"response": []
+				},
+				{
+					"name": "refresh token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.tokens && jsonData.data.tokens.access_token) {",
+									"        pm.collectionVariables.set(\"token\", jsonData.data.tokens.access_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/refresh",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"refresh"
+							]
+						},
+						"description": "Generates a fresh access token using refresh token (from cookie or JSON body). Auto-updates 'token' variable."
+					},
+					"response": []
+				},
+				{
+					"name": "verify email",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/verify-email?token=YOUR_VERIFY_TOKEN_HERE",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"verify-email"
+							],
+							"query": [
+								{
+									"key": "token",
+									"value": "YOUR_VERIFY_TOKEN_HERE"
+								}
+							]
+						},
+						"description": "Validates verification token from user email link and activates the user account."
+					},
+					"response": []
+				},
+				{
+					"name": "resend verification email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"candidate@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/resend-verification",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"resend-verification"
+							]
+						},
+						"description": "Re-generates a 24-hour verification token and sends a fresh verification email."
+					},
+					"response": []
+				},
+				{
+					"name": "me (Current User Profile)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						},
+						"description": "Fetches current logged in user details with candidate and employer profile relations."
+					},
+					"response": []
+				},
+				{
+					"name": "logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Clears HTTP-only tokens and session flag cookies."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "lookup",
+			"item": [
+				{
+					"name": "get lookup options (Roles, Industries, Skills)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/lookup/options",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"lookup",
+								"options"
+							]
+						},
+						"description": "Returns active Job Roles, Industries, and Skills for onboarding dropdowns and multi-select tags."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "onboarding",
+			"item": [
+				{
+					"name": "candidate onboarding",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phone\": \"+1234567890\",\n  \"jobRoleId\": \"\",\n  \"customJobRole\": \"Full Stack Software Engineer\",\n  \"industryId\": \"\",\n  \"skills\": [\"React\", \"TypeScript\", \"Next.js\", \"Node.js\"],\n  \"experienceLevel\": \"MID_LEVEL\",\n  \"yearsOfExperience\": 3,\n  \"educationLevel\": \"BACHELORS\",\n  \"fieldOfStudy\": \"Computer Science & Engineering\",\n  \"institution\": \"University of Dhaka\",\n  \"graduationYear\": 2022,\n  \"currentSalary\": 60000,\n  \"expectedSalary\": 85000,\n  \"currency\": \"USD\",\n  \"salaryPeriod\": \"YEARLY\",\n  \"preferredJobTypes\": [\"FULL_TIME\", \"REMOTE\"],\n  \"preferredWorkplaces\": [\"REMOTE\", \"HYBRID\"],\n  \"location\": \"Dhaka, Bangladesh\",\n  \"isOpenToRelocation\": true,\n  \"noticePeriod\": \"1_MONTH\",\n  \"bio\": \"Passionate Full Stack engineer with strong TypeScript and React experience.\",\n  \"linkedinUrl\": \"https://linkedin.com/in/johndoe\",\n  \"githubUrl\": \"https://github.com/johndoe\",\n  \"portfolioUrl\": \"https://johndoe.dev\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/candidate/onboarding",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"candidate",
+								"onboarding"
+							]
+						},
+						"description": "Submits candidate onboarding profile. Automatically creates any newly typed skill in database."
+					},
+					"response": []
+				},
+				{
+					"name": "employer onboarding",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyName\": \"Acme Technologies Ltd.\",\n  \"industryId\": \"\",\n  \"companySize\": \"51-200\",\n  \"companyWebsite\": \"https://acme.inc\",\n  \"companyLocation\": \"Silicon Valley, CA\",\n  \"companyDescription\": \"Leading tech firm building modern recruitment solutions.\",\n  \"rolesHiringFor\": [\"Full Stack Engineer\", \"DevOps Specialist\"],\n  \"phone\": \"+1987654321\",\n  \"designation\": \"Technical Recruiter\",\n  \"linkedinUrl\": \"https://linkedin.com/company/acme\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/employer/onboarding",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"employer",
+								"onboarding"
+							]
+						},
+						"description": "Submits employer onboarding profile. Automatically maps or adds hiring roles in database."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

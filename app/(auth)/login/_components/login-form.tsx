@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import CommonFieldset from "@/components/ui/fieldset";
@@ -17,6 +17,16 @@ import api from "@/lib/axios-client";
 const LoginForm = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
+
+    // Show toast if redirected due to session expiration
+    useEffect(() => {
+        const errorParam = searchParams.get("error");
+        if (errorParam === "session_expired") {
+            toast.error("Session expired. Please log in again.", {
+                id: "session-expired",
+            });
+        }
+    }, [searchParams]);
 
     // state
     const [isResendModalOpen, setIsResendModalOpen] = useState(false);

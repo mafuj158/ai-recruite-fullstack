@@ -77,7 +77,7 @@ export async function axiosPrivateServer(): Promise<AxiosInstance> {
         } catch {
           // Server Component render-এ ডিলিট ব্লক হলে ক্যাচ করবে
         }
-        redirect("/login");
+        redirect("/login?error=session_expired");
       }
 
       return Promise.reject(error);

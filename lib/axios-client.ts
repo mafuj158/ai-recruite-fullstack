@@ -67,7 +67,7 @@ api.interceptors.response.use(
         if (typeof window !== "undefined") {
           const currentPath = window.location.pathname;
           if (!currentPath.startsWith("/login") && !currentPath.startsWith("/register")) {
-            window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+            window.location.href = `/login?error=session_expired&redirect=${encodeURIComponent(currentPath)}`;
           }
         }
         return Promise.reject(error);
@@ -82,7 +82,7 @@ api.interceptors.response.use(
 
           if (!(isMeRequest && isPublicPage)) {
             if (!currentPath.startsWith("/login") && !currentPath.startsWith("/register")) {
-              window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+              window.location.href = `/login?error=session_expired&redirect=${encodeURIComponent(currentPath)}`;
             }
           }
         }
@@ -130,7 +130,7 @@ api.interceptors.response.use(
 
           if (!(isMeRequest && isPublicPage)) {
             if (!currentPath.startsWith("/login") && !currentPath.startsWith("/register")) {
-              window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+              window.location.href = `/login?error=session_expired&redirect=${encodeURIComponent(currentPath)}`;
             }
           }
         }
