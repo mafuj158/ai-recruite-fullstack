@@ -22,6 +22,7 @@ import {
 } from "react-icons/fi";
 import Logo from "../ui/logo";
 import { useAppStore } from "@/store";
+import { useMe } from "@/hooks";
 
 const employerNavItems = [
   { name: "Dashboard", href: "/employer/dashboard", icon: FiGrid },
@@ -57,6 +58,7 @@ interface DashboardSidebarProps {
 }
 
 export function DashboardSidebar({ type, user }: DashboardSidebarProps) {
+  const { user: userData } = useMe();
   const pathname = usePathname();
   const toggleLogoutModal = useAppStore((state) => state.toggleLogoutModal);
   const isMobileSidebarOpen = useAppStore((state) => state.isMobileSidebarOpen);
@@ -65,21 +67,34 @@ export function DashboardSidebar({ type, user }: DashboardSidebarProps) {
   const isEmployer = type === "employer";
   const navItems = isEmployer ? employerNavItems : candidateNavItems;
 
+  const displayName =
+    user?.name ||
+    userData?.candidateProfile?.fullName ||
+    userData?.employerProfile?.fullName ||
+    userData?.employerProfile?.companyName ||
+    userData?.email?.split("@")[0] ||
+    (isEmployer ? `${userData?.employerProfile?.companyName}` : "Candidate User");
+
+  const displayRole =
+    user?.role ||
+    userData?.role ||
+    (isEmployer ? "Hiring Manager" : "Candidate");
+
+  const initials =
+    user?.initials ||
+    displayName
+      .split(" ")
+      .filter(Boolean)
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() ||
+    (isEmployer ? "HR" : "CU");
+
   const userInfo = {
-    name: user?.name || (isEmployer ? "Acme Technologies" : "John Doe"),
-    role: user?.role || (isEmployer ? "Hiring Manager" : "Candidate"),
-    initials:
-      user?.initials ||
-      (user?.name
-        ? user.name
-          .split(" ")
-          .map((n) => n[0])
-          .slice(0, 2)
-          .join("")
-          .toUpperCase()
-        : isEmployer
-          ? "HR"
-          : "JD"),
+    name: displayName,
+    role: displayRole,
+    initials,
   };
 
   // Close mobile sidebar on route change
@@ -257,3 +272,4 @@ export function DashboardSidebar({ type, user }: DashboardSidebarProps) {
     </>
   );
 }
+export default DashboardSidebar;

@@ -1,16 +1,18 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { AUTH_COOKIES } from "@/constants";
 
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-const ACCESS_TOKEN_NAME =
-  process.env.NEXT_PUBLIC_ACCESS_TOKEN_NAME || "access_token";
-const REFRESH_TOKEN_NAME =
-  process.env.NEXT_PUBLIC_REFRESH_TOKEN_NAME || "refresh_token";
+const baseURL =
+  process.env.NEXT_PUBLIC_APP_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:3000";
+const ACCESS_TOKEN_NAME = AUTH_COOKIES.ACCESS_TOKEN;
+const REFRESH_TOKEN_NAME = AUTH_COOKIES.REFRESH_TOKEN;
 
 /**
  * Server-side private Axios instance

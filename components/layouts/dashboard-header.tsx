@@ -9,6 +9,7 @@ import {
   MOCK_CANDIDATE_NOTIFICATIONS,
   MOCK_EMPLOYER_NOTIFICATIONS,
 } from "./notification-dummy";
+import { useMe } from "@/hooks";
 
 interface DashboardHeaderProps {
   user?: {
@@ -19,25 +20,39 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader = ({ user }: DashboardHeaderProps) => {
+  const { user: userData } = useMe();
   const pathname = usePathname();
   const toggleMobileSidebar = useAppStore((state) => state.toggleMobileSidebar);
   const isEmployer = pathname.includes("/employer");
 
+  const displayName =
+    user?.name ||
+    userData?.candidateProfile?.fullName ||
+    userData?.employerProfile?.fullName ||
+    userData?.employerProfile?.companyName ||
+    userData?.email?.split("@")[0] ||
+    (isEmployer ? "Acme Technologies" : "Candidate User");
+
+  const displayRole =
+    user?.role ||
+    userData?.role ||
+    (isEmployer ? "Hiring Manager" : "Candidate");
+
+  const initials =
+    user?.initials ||
+    displayName
+      .split(" ")
+      .filter(Boolean)
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() ||
+    (isEmployer ? "HR" : "CU");
+
   const userInfo = {
-    name: user?.name || (isEmployer ? "Acme Technologies" : "John Doe"),
-    role: user?.role || (isEmployer ? "Hiring Manager" : "Candidate"),
-    initials:
-      user?.initials ||
-      (user?.name
-        ? user.name
-            .split(" ")
-            .map((n) => n[0])
-            .slice(0, 2)
-            .join("")
-            .toUpperCase()
-        : isEmployer
-        ? "HR"
-        : "JD"),
+    name: displayName,
+    role: displayRole,
+    initials,
   };
 
   return (
