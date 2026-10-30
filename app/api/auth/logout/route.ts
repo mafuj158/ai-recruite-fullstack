@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import httpStatus from "http-status";
+import { AUTH_COOKIES } from "@/constants";
 
 export async function POST() {
   try {
@@ -13,10 +14,9 @@ export async function POST() {
     );
 
     const isProduction = process.env.NODE_ENV === "production";
-    const accessTokenCookieName =
-      process.env.NEXT_PUBLIC_ACCESS_TOKEN_NAME || "ai_recruite_access_token";
-    const refreshTokenCookieName =
-      process.env.NEXT_PUBLIC_REFRESH_TOKEN_NAME || "ai_recruite_refresh_token";
+    const accessTokenCookieName = AUTH_COOKIES.ACCESS_TOKEN;
+    const refreshTokenCookieName = AUTH_COOKIES.REFRESH_TOKEN;
+    const isLoggedInCookieName = AUTH_COOKIES.IS_LOGGED_IN;
 
     // Expire access token cookie
     response.cookies.set({
@@ -35,6 +35,18 @@ export async function POST() {
       name: refreshTokenCookieName,
       value: "",
       httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 0,
+      expires: new Date(0),
+    });
+
+    // Expire session flag cookie
+    response.cookies.set({
+      name: isLoggedInCookieName,
+      value: "",
+      httpOnly: false,
       secure: isProduction,
       sameSite: "lax",
       path: "/",

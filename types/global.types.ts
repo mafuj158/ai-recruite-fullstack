@@ -11,8 +11,6 @@ export interface User {
   createdAt?: string;
 }
 
-export type { CandidateOnboardingFormValues, WorkTypePreference } from "./candidate/onboarding.types";
-export type { EmployerOnboardingFormValues } from "./employer/onboarding.types";
 
 export interface BreadcrumbItem {
   label: string;

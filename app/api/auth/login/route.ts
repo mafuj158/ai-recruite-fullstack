@@ -9,7 +9,7 @@ import {
   LoginResponseData,
   ValidationErrorItem,
 } from "@/types";
-import { USER_ROLES } from "@/constants";
+import { USER_ROLES, AUTH_COOKIES } from "@/constants";
 
 export async function POST(req: NextRequest) {
   try {
@@ -181,11 +181,10 @@ export async function POST(req: NextRequest) {
       { status: httpStatus.OK }
     );
 
-    // ১০. সিকিউর HTTP-only কুকি সেট করা
-    const accessTokenCookieName =
-      process.env.NEXT_PUBLIC_ACCESS_TOKEN_NAME || "ai_recruite_access_token";
-    const refreshTokenCookieName =
-      process.env.NEXT_PUBLIC_REFRESH_TOKEN_NAME || "ai_recruite_refresh_token";
+    // ১০. সিকিউর HTTP-only কুকি ও সেশন ফ্ল্যাগ কুকি সেট করা
+    const accessTokenCookieName = AUTH_COOKIES.ACCESS_TOKEN;
+    const refreshTokenCookieName = AUTH_COOKIES.REFRESH_TOKEN;
+    const isLoggedInCookieName = AUTH_COOKIES.IS_LOGGED_IN;
 
     const isProduction = process.env.NODE_ENV === "production";
 
@@ -211,6 +210,17 @@ export async function POST(req: NextRequest) {
       name: refreshTokenCookieName,
       value: refreshToken,
       httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/",
+      maxAge: refreshTokenMaxAge,
+    });
+
+    // Session flag cookie (client JS can read this to know if authenticated)
+    response.cookies.set({
+      name: isLoggedInCookieName,
+      value: "true",
+      httpOnly: false,
       secure: isProduction,
       sameSite: "lax",
       path: "/",
