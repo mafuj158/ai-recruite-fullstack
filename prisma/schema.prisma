@@ -16,24 +16,55 @@ enum Role {
   ADMIN
 }
 
+enum JobStatus {
+  DRARFT
+  ACTIVE
+  CLOSED
+  ARCHIVED
+}
+
+enum WorkplaceType {
+  ON_SITE
+  HYBRID
+  REMOTE
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  FREELANCE
+}
+
+enum ApplicationStatus {
+  APPLIED
+  IN_REVIEW
+  SHORTLISTED
+  INTERVIEWING
+  OFFERED
+  HIRED
+  REJECTED
+}
+
 // ----------------------------------------------------
 // USER & ACCOUNTS
 // ----------------------------------------------------
 
 model User {
-  id                 String            @id @default(cuid())
-  email              String            @unique
+  id                 String    @id @default(cuid())
+  email              String    @unique
   passwordHash       String
-  role               Role              @default(CANDIDATE)
-  isEmailVerified    Boolean           @default(false)
-  emailVerifyToken   String?           @unique
+  role               Role      @default(CANDIDATE)
+  isEmailVerified    Boolean   @default(false)
+  emailVerifyToken   String?   @unique
   emailVerifyExpires DateTime?
-  isOnboarded        Boolean           @default(false)
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  isOnboarded        Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  candidateProfile   CandidateProfile?
-  employerProfile    EmployerProfile?
+  candidateProfile CandidateProfile?
+  employerProfile  EmployerProfile?
 
   @@map("users")
 }
@@ -43,64 +74,65 @@ model User {
 // ----------------------------------------------------
 
 model CandidateProfile {
-  id                 String    @id @default(cuid())
-  userId             String    @unique
-  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fullName           String
-  avatarUrl          String?
-  phone              String?
+  id        String  @id @default(cuid())
+  userId    String  @unique
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName  String
+  avatarUrl String?
+  phone     String?
 
   // Onboarding Core Relations (Single Objects & Many-to-Many Skills)
-  jobRoleId          String?
-  jobRole            JobRole?  @relation(fields: [jobRoleId], references: [id], onDelete: SetNull)
+  jobRoleId String?
+  jobRole   JobRole? @relation(fields: [jobRoleId], references: [id], onDelete: SetNull)
 
-  industryId         String?
-  industry           Industry? @relation(fields: [industryId], references: [id], onDelete: SetNull)
+  industryId String?
+  industry   Industry? @relation(fields: [industryId], references: [id], onDelete: SetNull)
 
-  skills             Skill[]
-
+  skills            Skill[]
+  applications      JobApplication[]
   // Other Onboarding Fields
-  experienceLevel    String?
-  workType           String?   // Remote, Hybrid, On-site
-  preferredLocation  String?
-  salaryExpectation  String?
-  bio                String?
+  experienceLevel   String?
+  workType          String? // Remote, Hybrid, On-site
+  preferredLocation String?
+  salaryExpectation String?
+  bio               String?
 
   // CV / Resume Info
-  cvOption           String?   // upload | generate
-  cvFileName         String?
-  cvFileSize         String?
-  cvUrl              String?
+  cvOption   String? // upload | generate
+  cvFileName String?
+  cvFileSize String?
+  cvUrl      String?
 
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("candidate_profiles")
 }
 
 model EmployerProfile {
-  id                 String    @id @default(cuid())
-  userId             String    @unique
-  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fullName           String
-  companyName        String?
-  logoUrl            String?
-  website            String?
+  id          String  @id @default(cuid())
+  userId      String  @unique
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName    String
+  companyName String?
+  logoUrl     String?
+  website     String?
 
   // Relations & Core Onboarding Fields
-  industryId         String?
-  industry           Industry? @relation(fields: [industryId], references: [id], onDelete: SetNull)
-  rolesHiringFor     JobRole[]
+  jobs           Job[]
+  industryId     String?
+  industry       Industry? @relation(fields: [industryId], references: [id], onDelete: SetNull)
+  rolesHiringFor JobRole[]
 
-  companySize        String?
-  location           String?
-  aboutCompany       String?
+  companySize  String?
+  location     String?
+  aboutCompany String?
 
-  preferredExpLevels String[]  @default([])
+  preferredExpLevels String[] @default([])
   budgetRange        String?
 
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("employer_profiles")
 }
@@ -118,6 +150,7 @@ model JobRole {
   employers  EmployerProfile[]
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt
+  jobs       Job[]
 
   @@map("job_roles")
 }
@@ -129,6 +162,7 @@ model Skill {
   isPopular  Boolean            @default(false)
   isActive   Boolean            @default(true)
   candidates CandidateProfile[]
+  jobs       Job[]
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt
 
@@ -142,10 +176,87 @@ model Industry {
   isActive   Boolean            @default(true)
   candidates CandidateProfile[]
   employers  EmployerProfile[]
+  jobs       Job[]
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt
 
   @@map("industries")
 }
 
+model Job {
+  id                String           @id @default(cuid())
+  slug              String           @unique
+  employerProfileId String
+  employerProfile   EmployerProfile  @relation(fields: [employerProfileId], references: [id], onDelete: Cascade)
+  applications      JobApplication[]
+  jobTitle          String
+  department        String?
+  location          String
+  workplaceType     WorkplaceType    @default(HYBRID)
+  employmentType    EmploymentType   @default(FULL_TIME)
+  experienceLevel   String // Entry, Mid, Senior, Lead
+  education         String?
 
+  // Salary / Compensation
+  currency           String  @default("USD")
+  minSalary          Float?
+  maxSalary          Float?
+  salaryPeriod       String  @default("YEARLY")
+  isSalaryNegotiable Boolean @default(false)
+  salaryRange        String?
+
+  // Job Content
+  jobDescription       String   @db.Text
+  coreResponsibilities String[] @default([])
+
+  // Lookup Relations
+  jobRoleId String?
+  jobRole   JobRole? @relation(fields: [jobRoleId], references: [id], onDelete: SetNull)
+
+  industryId String?
+  industry   Industry? @relation(fields: [industryId], references: [id], onDelete: SetNull)
+
+  skills Skill[]
+
+  // AI Matching Configuration (weights for ATS scoring)
+  matchingWeights Json? @default("{\"skills\":30,\"experience\":25,\"requirements\":20,\"education\":15,\"softSkills\":10}")
+
+  status              JobStatus @default(ACTIVE)
+  applicationDeadline DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employerProfileId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("jobs")
+}
+
+model JobApplication {
+  id String @id @default(cuid())
+
+  jobId String
+  job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  candidateProfileId String
+  candidateProfile   CandidateProfile @relation(fields: [candidateProfileId], references: [id], onDelete: Cascade)
+
+  status ApplicationStatus @default(APPLIED)
+
+  // AI Matching & Screening Info
+  aiMatchScore  Float? // যেমন: 88.5%
+  aiMatchReason String? @db.Text
+
+  coverLetter String? @db.Text
+  resumeUrl   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([jobId, candidateProfileId]) // একজন ক্যান্ডিডেট একই জবে একাধিকবার অ্যাপ্লাই করতে পারবে না
+  @@index([jobId])
+  @@index([candidateProfileId])
+  @@index([status])
+  @@map("job_applications")
+}
