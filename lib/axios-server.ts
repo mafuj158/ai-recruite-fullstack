@@ -1,6 +1,5 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { AUTH_COOKIES } from "@/constants";
 
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
@@ -69,15 +68,6 @@ export async function axiosPrivateServer(): Promise<AxiosInstance> {
             console.error("Server-side token refresh failed:", refreshErr);
           }
         }
-
-        // রিফ্রেশ ব্যর্থ হলে লগইনে রিডাইরেক্ট
-        try {
-          cookieStore.delete(ACCESS_TOKEN_NAME);
-          cookieStore.delete(REFRESH_TOKEN_NAME);
-        } catch {
-          // Server Component render-এ ডিলিট ব্লক হলে ক্যাচ করবে
-        }
-        redirect("/login?error=session_expired");
       }
 
       return Promise.reject(error);

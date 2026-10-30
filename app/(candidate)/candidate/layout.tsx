@@ -31,18 +31,8 @@ export default async function CandidateLayout({
         queryFn: () => meService.getMe(axiosServer),
       });
     } catch (error: unknown) {
-      // Re-throw redirect errors thrown by Next.js navigation (e.g. redirect("/login"))
-      if (
-        error &&
-        typeof error === "object" &&
-        "digest" in error &&
-        typeof (error as Record<string, unknown>).digest === "string" &&
-        ((error as Record<string, unknown>).digest as string).startsWith("NEXT_REDIRECT")
-      ) {
-        throw error;
-      }
-      console.error(
-        "[CandidateLayout] Prefetch /auth/me failed:",
+      console.warn(
+        "[CandidateLayout] Prefetch /auth/me failed (will hydrate on client):",
         error instanceof Error ? error.message : error
       );
     }
