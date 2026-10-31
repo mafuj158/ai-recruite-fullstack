@@ -20,6 +20,11 @@
 			"key": "refreshToken",
 			"value": "",
 			"type": "string"
+		},
+		{
+			"key": "jobId",
+			"value": "",
+			"type": "string"
 		}
 	],
 	"item": [
@@ -38,7 +43,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"fullName\": \"John Doe\",\n  \"email\": \"candidate@example.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"CANDIDATE\",\n  \"companyName\": \"\"\n}"
+							"raw": "{\n  \"fullName\": \"John Doe\",\n  \"email\": \"employer@example.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"EMPLOYER\",\n  \"companyName\": \"TechCorp Inc\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/auth/register",
@@ -88,7 +93,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"candidate@example.com\",\n  \"password\": \"Password123!\"\n}"
+							"raw": "{\n  \"email\": \"employer@example.com\",\n  \"password\": \"Password123!\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/auth/login",
@@ -188,7 +193,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"candidate@example.com\"\n}"
+							"raw": "{\n  \"email\": \"employer@example.com\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/auth/resend-verification",
@@ -283,85 +288,353 @@
 			]
 		},
 		{
-			"name": "onboarding",
+			"name": "employer",
 			"item": [
 				{
-					"name": "candidate onboarding",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"phone\": \"+1234567890\",\n  \"jobRoleId\": \"\",\n  \"customJobRole\": \"Full Stack Software Engineer\",\n  \"industryId\": \"\",\n  \"skills\": [\"React\", \"TypeScript\", \"Next.js\", \"Node.js\"],\n  \"experienceLevel\": \"MID_LEVEL\",\n  \"yearsOfExperience\": 3,\n  \"educationLevel\": \"BACHELORS\",\n  \"fieldOfStudy\": \"Computer Science & Engineering\",\n  \"institution\": \"University of Dhaka\",\n  \"graduationYear\": 2022,\n  \"currentSalary\": 60000,\n  \"expectedSalary\": 85000,\n  \"currency\": \"USD\",\n  \"salaryPeriod\": \"YEARLY\",\n  \"preferredJobTypes\": [\"FULL_TIME\", \"REMOTE\"],\n  \"preferredWorkplaces\": [\"REMOTE\", \"HYBRID\"],\n  \"location\": \"Dhaka, Bangladesh\",\n  \"isOpenToRelocation\": true,\n  \"noticePeriod\": \"1_MONTH\",\n  \"bio\": \"Passionate Full Stack engineer with strong TypeScript and React experience.\",\n  \"linkedinUrl\": \"https://linkedin.com/in/johndoe\",\n  \"githubUrl\": \"https://github.com/johndoe\",\n  \"portfolioUrl\": \"https://johndoe.dev\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/candidate/onboarding",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"candidate",
-								"onboarding"
-							]
-						},
-						"description": "Submits candidate onboarding profile. Automatically creates any newly typed skill in database."
-					},
-					"response": []
+					"name": "onboarding",
+					"item": [
+						{
+							"name": "employer onboarding",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"companyName\": \"Acme Technologies Ltd.\",\n  \"industryId\": \"\",\n  \"companySize\": \"51-200\",\n  \"companyWebsite\": \"https://acme.inc\",\n  \"companyLocation\": \"Silicon Valley, CA\",\n  \"companyDescription\": \"Leading tech firm building modern recruitment solutions.\",\n  \"rolesHiringFor\": [\"Full Stack Engineer\", \"DevOps Specialist\"],\n  \"phone\": \"+1987654321\",\n  \"designation\": \"Technical Recruiter\",\n  \"linkedinUrl\": \"https://linkedin.com/company/acme\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/employer/onboarding",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"employer",
+										"onboarding"
+									]
+								},
+								"description": "Submits employer onboarding profile. Automatically maps or adds hiring roles in database."
+							},
+							"response": []
+						}
+					]
 				},
 				{
-					"name": "employer onboarding",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
+					"name": "jobs",
+					"item": [
+						{
+							"name": "create job (Active or Draft)",
+							"event": [
 								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201 || pm.response.code === 200) {",
+											"    var jsonData = pm.response.json();",
+											"    if (jsonData.data && jsonData.data.id) {",
+											"        pm.collectionVariables.set(\"jobId\", jsonData.data.id);",
+											"    }",
+											"}"
+										],
+										"type": "text/javascript"
+									}
 								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"companyName\": \"Acme Technologies Ltd.\",\n  \"industryId\": \"\",\n  \"companySize\": \"51-200\",\n  \"companyWebsite\": \"https://acme.inc\",\n  \"companyLocation\": \"Silicon Valley, CA\",\n  \"companyDescription\": \"Leading tech firm building modern recruitment solutions.\",\n  \"rolesHiringFor\": [\"Full Stack Engineer\", \"DevOps Specialist\"],\n  \"phone\": \"+1987654321\",\n  \"designation\": \"Technical Recruiter\",\n  \"linkedinUrl\": \"https://linkedin.com/company/acme\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/employer/onboarding",
-							"host": [
-								"{{baseUrl}}"
 							],
-							"path": [
-								"api",
-								"employer",
-								"onboarding"
-							]
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"jobTitle\": \"Senior Full Stack Engineer\",\n  \"department\": \"Engineering\",\n  \"location\": \"San Francisco, CA\",\n  \"workplaceType\": \"HYBRID\",\n  \"employmentType\": \"FULL_TIME\",\n  \"experienceLevel\": \"Senior Level\",\n  \"education\": \"Bachelor's in Computer Science or equivalent\",\n  \"currency\": \"USD\",\n  \"minSalary\": 120000,\n  \"maxSalary\": 160000,\n  \"salaryPeriod\": \"YEARLY\",\n  \"isSalaryNegotiable\": true,\n  \"salaryRange\": \"$120,000 - $160,000\",\n  \"jobDescription\": \"We are seeking a seasoned Senior Full Stack Engineer to build next-generation AI recruitment interfaces and high-scale APIs.\",\n  \"coreResponsibilities\": [\n    \"Architect scalable microservices using Node.js and Next.js\",\n    \"Integrate real-time AI interview analysis models\",\n    \"Mentor junior engineers and perform rigorous code reviews\"\n  ],\n  \"skills\": [\"React\", \"TypeScript\", \"Next.js\", \"Node.js\", \"PostgreSQL\", \"Prisma\"],\n  \"status\": \"ACTIVE\",\n  \"applicationDeadline\": \"2026-12-31T23:59:59.000Z\",\n  \"matchingWeights\": {\n    \"skills\": 35,\n    \"experience\": 25,\n    \"requirements\": 20,\n    \"education\": 10,\n    \"softSkills\": 10\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/employer/jobs",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"employer",
+										"jobs"
+									]
+								},
+								"description": "Creates a new job posting for the logged-in employer. Set 'status' to 'DRAFT' or 'ACTIVE'. Automatically saves the created 'jobId' variable on success."
+							},
+							"response": []
 						},
-						"description": "Submits employer onboarding profile. Automatically maps or adds hiring roles in database."
-					},
-					"response": []
+						{
+							"name": "list employer jobs (Filtered & Search)",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/employer/jobs?status=ALL&search=&page=1&limit=10",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"employer",
+										"jobs"
+									],
+									"query": [
+										{
+											"key": "status",
+											"value": "ALL",
+											"description": "ALL, ACTIVE, DRAFT, CLOSED"
+										},
+										{
+											"key": "search",
+											"value": "",
+											"description": "Search by job title, department, or location"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								},
+								"description": "Returns all jobs posted by the employer with tab counts summary (all, active, draft, closed) and application count."
+							},
+							"response": []
+						},
+						{
+							"name": "get single job details",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/employer/jobs/{{jobId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"employer",
+										"jobs",
+										"{{jobId}}"
+									]
+								},
+								"description": "Fetches complete job details, applicant counts, and assigned skills."
+							},
+							"response": []
+						},
+						{
+							"name": "update job",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"jobTitle\": \"Lead Full Stack & AI Engineer\",\n  \"salaryRange\": \"$140,000 - $180,000\",\n  \"isSalaryNegotiable\": true,\n  \"status\": \"ACTIVE\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/employer/jobs/{{jobId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"employer",
+										"jobs",
+										"{{jobId}}"
+									]
+								},
+								"description": "Partially updates an existing job posting owned by the employer."
+							},
+							"response": []
+						},
+						{
+							"name": "quick update job status (Active / Closed / Draft)",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"CLOSED\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/employer/jobs/{{jobId}}/status",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"employer",
+										"jobs",
+										"{{jobId}}",
+										"status"
+									]
+								},
+								"description": "One-click status toggle for closing or reactivating a job."
+							},
+							"response": []
+						},
+						{
+							"name": "delete job",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/employer/jobs/{{jobId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"employer",
+										"jobs",
+										"{{jobId}}"
+									]
+								},
+								"description": "Deletes or archives a job posting owned by the employer."
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "candidate",
+			"item": [
+				{
+					"name": "onboarding",
+					"item": [
+						{
+							"name": "candidate onboarding",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"phone\": \"+1234567890\",\n  \"jobRoleId\": \"\",\n  \"customJobRole\": \"Full Stack Software Engineer\",\n  \"industryId\": \"\",\n  \"skills\": [\"React\", \"TypeScript\", \"Next.js\", \"Node.js\"],\n  \"experienceLevel\": \"MID_LEVEL\",\n  \"yearsOfExperience\": 3,\n  \"educationLevel\": \"BACHELORS\",\n  \"fieldOfStudy\": \"Computer Science & Engineering\",\n  \"institution\": \"University of Dhaka\",\n  \"graduationYear\": 2022,\n  \"currentSalary\": 60000,\n  \"expectedSalary\": 85000,\n  \"currency\": \"USD\",\n  \"salaryPeriod\": \"YEARLY\",\n  \"preferredJobTypes\": [\"FULL_TIME\", \"REMOTE\"],\n  \"preferredWorkplaces\": [\"REMOTE\", \"HYBRID\"],\n  \"location\": \"Dhaka, Bangladesh\",\n  \"isOpenToRelocation\": true,\n  \"noticePeriod\": \"1_MONTH\",\n  \"bio\": \"Passionate Full Stack engineer with strong TypeScript and React experience.\",\n  \"linkedinUrl\": \"https://linkedin.com/in/johndoe\",\n  \"githubUrl\": \"https://github.com/johndoe\",\n  \"portfolioUrl\": \"https://johndoe.dev\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/candidate/onboarding",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"candidate",
+										"onboarding"
+									]
+								},
+								"description": "Submits candidate onboarding profile. Automatically creates any newly typed skill in database."
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		}

@@ -4,15 +4,15 @@ import CommonFieldset from "@/components/ui/fieldset";
 import { Button } from "@/components/ui/button";
 import { LuSparkles } from "react-icons/lu";
 import toast from "react-hot-toast";
-import { PostJobFormValues } from "@/types/employer/post-job.types";
+import { CreateJobPayload } from "@/types/employer/post-job.types";
 import ResponsibilitiesInput from "./responsibilities-input";
 
 interface JobDescriptionSectionProps {
-  control: Control<PostJobFormValues>;
-  errors: FieldErrors<PostJobFormValues>;
-  setValue: UseFormSetValue<PostJobFormValues>;
+  control: Control<CreateJobPayload>;
+  errors: FieldErrors<CreateJobPayload>;
+  setValue: UseFormSetValue<CreateJobPayload>;
   jobTitle: string;
-  department: string;
+  department?: string;
   coreResponsibilities?: string[];
   responsibilitiesError?: string;
 }
@@ -48,70 +48,71 @@ export default function JobDescriptionSection({
       ];
 
       setValue("jobDescription", generated, { shouldValidate: true });
-      setValue("coreResponsibilities", generatedResponsibilities, { shouldValidate: true });
+      setValue("coreResponsibilities", generatedResponsibilities, {
+        shouldValidate: true,
+      });
+
       setIsGeneratingAI(false);
-      toast.success("AI generated description & core responsibilities loaded!");
-    }, 600);
+      toast.success("AI generated job description & responsibilities!");
+    }, 1200);
   };
 
   return (
-    <div className="space-y-6">
-      {/* Job Description Textarea */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between gap-2">
+    <div className="space-y-5">
+      {/* Header with AI Generate Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
           <div className="flex items-center gap-2">
             <h2 className="text-sm sm:text-base font-semibold text-zinc-900">
-              Job Details <span className="text-red-500 ml-0.5">*</span>
+              Job Description
             </h2>
-            <span className="text-xs text-zinc-400 hidden sm:inline">
-              • Role overview & mission
+            <span className="text-xs text-zinc-400">
+              <span className="hidden sm:inline">• </span>Detailed overview
             </span>
           </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleGenerateAIDescription}
-            disabled={isGeneratingAI}
-            isLoading={isGeneratingAI}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-forest hover:text-forest/80 bg-[#EDF6F1] hover:bg-[#E3EFE8] border border-[#D5E6DC] px-3 py-1.5 rounded transition-colors cursor-pointer disabled:opacity-50 shadow-2xs h-auto"
-          >
-            <LuSparkles
-              className={`size-3.5 text-forest ${
-                isGeneratingAI ? "animate-spin" : ""
-              }`}
-            />
-            <span>{isGeneratingAI ? "Generating" : "Generate with AI"}</span>
-          </Button>
+          <p className="text-xs text-zinc-500 mt-0.5">
+            Describe the role mission or generate one with AI assistance
+          </p>
         </div>
 
-        <CommonFieldset<PostJobFormValues>
-          control={control}
-          register_as="jobDescription"
-          type="textarea"
-          label="Description"
-          placeholder="Describe the role, company culture, and what makes this opportunity compelling..."
-          textareaClass="normal-case min-h-36 sm:min-h-40 text-sm leading-relaxed"
-          isRequired={true}
-          errors={errors}
-          validationRules={{
-            required: "Job description is required",
-          }}
-        />
-
-        <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium pt-0.5 select-none">
-          <LuSparkles className="size-3.5 text-emerald-600 shrink-0" />
-          <span>Description optimized for better candidate engagement</span>
-        </div>
+        <Button
+          type="button"
+          onClick={handleGenerateAIDescription}
+          disabled={isGeneratingAI}
+          variant="outline"
+          className="self-start sm:self-auto border-emerald-300 text-forest hover:bg-[#EDF6F1] font-semibold text-xs py-2 px-3 rounded shadow-2xs flex items-center gap-1.5 cursor-pointer"
+        >
+          <LuSparkles className="size-3.5 text-lime-600 animate-pulse" />
+          {isGeneratingAI ? "Generating..." : "Generate with AI"}
+        </Button>
       </div>
 
-      {/* Core Responsibilities Input */}
+      {/* Description Textarea */}
+      <CommonFieldset<CreateJobPayload>
+        control={control}
+        register_as="jobDescription"
+        label="Full Job Description"
+        type="textarea"
+        placeholder="Provide an overview of the role, day-to-day work, and impact on the company..."
+        rows={5}
+        isRequired={true}
+        errors={errors}
+        validationRules={{
+          required: "Job description is required",
+          minLength: {
+            value: 50,
+            message: "Description must be at least 50 characters",
+          },
+        }}
+      />
+
+      {/* Core Responsibilities Dynamic Tag Input */}
       <ResponsibilitiesInput
         responsibilities={coreResponsibilities}
-        onChange={(newResps) =>
-          setValue("coreResponsibilities", newResps, { shouldValidate: true })
+        onChange={(updatedList) =>
+          setValue("coreResponsibilities", updatedList, { shouldValidate: true })
         }
-        error={responsibilitiesError || errors.coreResponsibilities?.message}
+        error={responsibilitiesError}
       />
     </div>
   );
