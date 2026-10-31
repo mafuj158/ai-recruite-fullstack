@@ -1,11 +1,11 @@
 import { Control, FieldErrors } from "react-hook-form";
 import CommonFieldset from "@/components/ui/fieldset";
 import dayjs from "dayjs";
-import { PostJobFormValues } from "@/types/employer/post-job.types";
+import { CreateJobPayload } from "@/types/employer/post-job.types";
 
 interface CompensationSectionProps {
-  control: Control<PostJobFormValues>;
-  errors: FieldErrors<PostJobFormValues>;
+  control: Control<CreateJobPayload>;
+  errors: FieldErrors<CreateJobPayload>;
 }
 
 export default function CompensationSection({
@@ -26,7 +26,7 @@ export default function CompensationSection({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-        <CommonFieldset<PostJobFormValues>
+        <CommonFieldset<CreateJobPayload>
           control={control}
           register_as="salaryRange"
           label="Salary Range"
@@ -38,7 +38,7 @@ export default function CompensationSection({
           }}
         />
 
-        <CommonFieldset<PostJobFormValues>
+        <CommonFieldset<CreateJobPayload>
           control={control}
           register_as="applicationDeadline"
           label="Application Deadline"

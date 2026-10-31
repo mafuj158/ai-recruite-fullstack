@@ -1,11 +1,11 @@
 import { Control, FieldErrors } from "react-hook-form";
 import CommonFieldset from "@/components/ui/fieldset";
-import { PostJobFormValues } from "@/types/employer/post-job.types";
+import { CreateJobPayload } from "@/types/employer/post-job.types";
 import { EMPLOYMENT_TYPE_OPTIONS } from "./post-job.constants";
 
 interface BasicInfoSectionProps {
-  control: Control<PostJobFormValues>;
-  errors: FieldErrors<PostJobFormValues>;
+  control: Control<CreateJobPayload>;
+  errors: FieldErrors<CreateJobPayload>;
 }
 
 export default function BasicInfoSection({
@@ -24,7 +24,7 @@ export default function BasicInfoSection({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-        <CommonFieldset<PostJobFormValues>
+        <CommonFieldset<CreateJobPayload>
           control={control}
           register_as="jobTitle"
           label="Job Title"
@@ -36,7 +36,7 @@ export default function BasicInfoSection({
           }}
         />
 
-        <CommonFieldset<PostJobFormValues>
+        <CommonFieldset<CreateJobPayload>
           control={control}
           register_as="department"
           label="Department"
@@ -48,7 +48,7 @@ export default function BasicInfoSection({
           }}
         />
 
-        <CommonFieldset<PostJobFormValues>
+        <CommonFieldset<CreateJobPayload>
           control={control}
           register_as="location"
           label="Location"
@@ -60,7 +60,7 @@ export default function BasicInfoSection({
           }}
         />
 
-        <CommonFieldset<PostJobFormValues>
+        <CommonFieldset<CreateJobPayload>
           control={control}
           register_as="employmentType"
           label="Employment Type"
