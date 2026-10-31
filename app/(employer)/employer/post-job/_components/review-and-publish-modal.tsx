@@ -13,12 +13,12 @@ import {
   LuDollarSign,
   LuCalendar,
 } from "react-icons/lu";
-import { PostJobFormValues } from "@/types/employer/post-job.types";
+import { CreateJobPayload } from "@/types/employer/post-job.types";
 
 interface ReviewAndPublishModalProps {
   isOpen: boolean;
   onClose: () => void;
-  data: PostJobFormValues;
+  data: CreateJobPayload;
 }
 
 export default function ReviewAndPublishModal({
@@ -128,15 +128,15 @@ export default function ReviewAndPublishModal({
               </div>
 
               {/* Required Skills */}
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
-                  Required Skills & Technologies
-                </h4>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-zinc-700">
+                  Required Skills & Technologies:
+                </p>
                 <div className="flex flex-wrap gap-1.5">
-                  {data.skills?.map((skill) => (
+                  {(data.skills || []).map((skill) => (
                     <span
                       key={skill}
-                      className="px-2.5 py-1 rounded text-xs font-medium bg-[#EDF6F1] text-forest border border-[#D5E6DC]"
+                      className="px-2.5 py-1 rounded bg-zinc-100 text-zinc-800 text-xs font-medium border border-zinc-200"
                     >
                       {skill}
                     </span>
@@ -144,93 +144,112 @@ export default function ReviewAndPublishModal({
                 </div>
               </div>
 
-              {/* AI Matching Weights Configured */}
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
-                  Configured AI Matching Weights
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                  <div className="p-2 rounded bg-zinc-50 border border-zinc-200/70 text-center">
-                    <span className="block text-[11px] text-zinc-500">Skills</span>
-                    <span className="text-xs font-bold text-forest">{weights.skills}%</span>
+              {/* Job Description Excerpt */}
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold text-zinc-700">
+                  Job Description:
+                </p>
+                <div className="p-3 rounded bg-zinc-50 border border-zinc-200 text-xs text-zinc-600 leading-relaxed max-h-32 overflow-y-auto whitespace-pre-wrap">
+                  {data.jobDescription}
+                </div>
+              </div>
+
+              {/* Core Responsibilities */}
+              {(data.coreResponsibilities || []).length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold text-zinc-700">
+                    Core Responsibilities:
+                  </p>
+                  <ul className="list-disc list-inside space-y-1 text-xs text-zinc-600 pl-1">
+                    {data.coreResponsibilities?.map((resp, i) => (
+                      <li key={i}>{resp}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Configured AI Weights */}
+              <div className="space-y-2 pt-2 border-t border-zinc-100">
+                <p className="text-xs font-semibold text-zinc-700">
+                  AI Matching Calibration:
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                  <div className="p-2 rounded bg-zinc-50 border border-zinc-200 flex justify-between">
+                    <span className="text-zinc-500">Skills</span>
+                    <span className="font-bold text-forest">{weights.skills}%</span>
                   </div>
-                  <div className="p-2 rounded bg-zinc-50 border border-zinc-200/70 text-center">
-                    <span className="block text-[11px] text-zinc-500">Experience</span>
-                    <span className="text-xs font-bold text-forest">{weights.experience}%</span>
+                  <div className="p-2 rounded bg-zinc-50 border border-zinc-200 flex justify-between">
+                    <span className="text-zinc-500">Experience</span>
+                    <span className="font-bold text-forest">{weights.experience}%</span>
                   </div>
-                  <div className="p-2 rounded bg-zinc-50 border border-zinc-200/70 text-center">
-                    <span className="block text-[11px] text-zinc-500">Requirements</span>
-                    <span className="text-xs font-bold text-forest">{weights.requirements}%</span>
+                  <div className="p-2 rounded bg-zinc-50 border border-zinc-200 flex justify-between">
+                    <span className="text-zinc-500">Requirements</span>
+                    <span className="font-bold text-forest">{weights.requirements}%</span>
                   </div>
-                  <div className="p-2 rounded bg-zinc-50 border border-zinc-200/70 text-center">
-                    <span className="block text-[11px] text-zinc-500">Education</span>
-                    <span className="text-xs font-bold text-forest">{weights.education}%</span>
+                  <div className="p-2 rounded bg-zinc-50 border border-zinc-200 flex justify-between">
+                    <span className="text-zinc-500">Education</span>
+                    <span className="font-bold text-forest">{weights.education}%</span>
                   </div>
-                  <div className="p-2 rounded bg-zinc-50 border border-zinc-200/70 text-center">
-                    <span className="block text-[11px] text-zinc-500">Soft Skills</span>
-                    <span className="text-xs font-bold text-forest">{weights.softSkills}%</span>
+                  <div className="p-2 rounded bg-zinc-50 border border-zinc-200 flex justify-between">
+                    <span className="text-zinc-500">Soft Skills</span>
+                    <span className="font-bold text-forest">{weights.softSkills}%</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 bg-zinc-50 border-t border-zinc-100">
-              <button
+            {/* Footer Actions */}
+            <div className="flex items-center justify-end gap-2.5 px-6 py-4 border-t border-zinc-100 bg-zinc-50/50">
+              <Button
                 type="button"
+                variant="outline"
                 onClick={onClose}
                 disabled={isPublishing}
-                className="px-4 py-2 text-xs sm:text-sm font-medium text-zinc-600 hover:text-zinc-900 rounded hover:bg-zinc-200/60 transition-colors cursor-pointer disabled:opacity-50"
+                className="text-xs py-2 px-3.5 rounded cursor-pointer"
               >
-                Edit Details
-              </button>
+                Back to Edit
+              </Button>
+
               <Button
                 type="button"
                 variant="primary"
-                isLoading={isPublishing}
                 onClick={handlePublish}
-                className="px-6 py-2.5 text-xs sm:text-sm font-semibold rounded shadow-xs cursor-pointer"
+                isLoading={isPublishing}
+                className="text-xs py-2 px-4 rounded font-semibold flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
+                <LuSparkles className="size-3.5 text-lime" />
                 Publish Job Now
               </Button>
             </div>
           </>
         ) : (
-          /* Success: Job Published State */
-          <div className="p-8 text-center space-y-5">
-            <div className="size-16 rounded-full bg-[#EDF6F1] border border-[#D5E6DC] flex items-center justify-center text-forest mx-auto">
-              <LuCircleCheck className="size-8" />
+          /* Success Screen */
+          <div className="p-8 text-center space-y-4">
+            <div className="size-14 rounded-full bg-[#EDF6F1] border-2 border-[#D5E6DC] flex items-center justify-center text-forest mx-auto">
+              <LuCircleCheck className="size-7" />
             </div>
 
-            <div>
-              <h3 className="text-xl font-bold text-zinc-900">
-                Job Published Successfully!
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-zinc-900">
+                Job Successfully Published!
               </h3>
-              <p className="text-xs sm:text-sm text-zinc-500 mt-1.5 max-w-md mx-auto">
-                <strong className="text-zinc-800">{data.jobTitle}</strong> is now live on AI-Recruite. AI candidate matching and pre-screening workflows are active.
+              <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                Your opening is now live and AI candidate ranking pipeline is actively indexing matches.
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <div className="pt-3 flex justify-center gap-2">
               <Button
                 type="button"
                 variant="primary"
-                onClick={() => router.push("/employer/my-jobs")}
-                className="w-full sm:w-auto px-6 py-2.5 text-xs sm:text-sm rounded"
+                onClick={() => {
+                  onClose();
+                  router.push("/employer/my-jobs");
+                }}
+                className="text-xs py-2 px-4 rounded font-semibold cursor-pointer"
               >
                 View in My Jobs
               </Button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsPublished(false);
-                  onClose();
-                  window.location.reload();
-                }}
-                className="w-full sm:w-auto px-5 py-2.5 text-xs sm:text-sm font-medium border border-zinc-200 rounded hover:bg-zinc-50 text-zinc-700 cursor-pointer"
-              >
-                Post Another Job
-              </button>
             </div>
           </div>
         )}
