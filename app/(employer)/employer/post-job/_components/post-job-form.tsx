@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { LuSparkles } from "react-icons/lu";
-import { PostJobFormValues } from "@/types/employer/post-job.types";
+import { CreateJobPayload } from "@/types/employer/post-job.types";
 import BasicInfoSection from "./basic-info-section";
 import JobDescriptionSection from "./job-description-section";
 import RequirementsSection from "./requirements-section";
@@ -12,11 +12,9 @@ import CompensationSection from "./compensation-section";
 import AiMatchingSection from "./ai-matching-section";
 import ReviewAndPublishModal from "./review-and-publish-modal";
 
-export type { PostJobFormValues };
-
 export default function PostJobForm() {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
-  const [formDataForReview, setFormDataForReview] = useState<PostJobFormValues | null>(null);
+  const [formDataForReview, setFormDataForReview] = useState<CreateJobPayload | null>(null);
 
   const {
     control,
@@ -25,7 +23,7 @@ export default function PostJobForm() {
     watch,
     register,
     formState: { errors },
-  } = useForm<PostJobFormValues>({
+  } = useForm<CreateJobPayload>({
     defaultValues: {
       jobTitle: "",
       department: "",
@@ -65,7 +63,7 @@ export default function PostJobForm() {
   const coreResponsibilities = watch("coreResponsibilities") || [];
   const skills = watch("skills") || [];
 
-  const onValidForm = (data: PostJobFormValues) => {
+  const onValidForm = (data: CreateJobPayload) => {
     setFormDataForReview(data);
     setIsReviewOpen(true);
   };

@@ -1,14 +1,14 @@
 import React from "react";
 import { Control, FieldErrors, UseFormSetValue } from "react-hook-form";
 import CommonFieldset from "@/components/ui/fieldset";
-import { PostJobFormValues } from "@/types/employer/post-job.types";
+import { CreateJobPayload } from "@/types/employer/post-job.types";
 import { EXPERIENCE_LEVEL_OPTIONS } from "./post-job.constants";
 import SkillsInput from "./skills-input";
 
 interface RequirementsSectionProps {
-  control: Control<PostJobFormValues>;
-  errors: FieldErrors<PostJobFormValues>;
-  setValue: UseFormSetValue<PostJobFormValues>;
+  control: Control<CreateJobPayload>;
+  errors: FieldErrors<CreateJobPayload>;
+  setValue: UseFormSetValue<CreateJobPayload>;
   skills: string[];
 }
 
@@ -39,7 +39,7 @@ export default function RequirementsSection({
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-        <CommonFieldset<PostJobFormValues>
+        <CommonFieldset<CreateJobPayload>
           control={control}
           register_as="experienceLevel"
           label="Experience Level"
@@ -53,16 +53,13 @@ export default function RequirementsSection({
           }}
         />
 
-        <CommonFieldset<PostJobFormValues>
+        <CommonFieldset<CreateJobPayload>
           control={control}
           register_as="education"
-          label="Education"
+          label="Education / Qualification"
           placeholder="e.g. Bachelor's in Computer Science"
-          isRequired={true}
+          isRequired={false}
           errors={errors}
-          validationRules={{
-            required: "Education is required",
-          }}
         />
       </div>
     </div>
